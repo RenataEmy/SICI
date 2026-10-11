@@ -5,21 +5,21 @@ import java.time.LocalTime;
 import jakarta.persistence.*;
 
 @Entity 
-@Table(name = "tb_interacao")
-public class Interacao {
+@Table(name = "tb_interaction")
+public class Interaction {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long interacao_id;
+    private Long interactionId;
 
     @Column(nullable = false, length = 300)
-    private String texto;
+    private String text;
 
     @Column (nullable = false)
-    private LocalTime dataHora;
+    private LocalTime dateTime;
 
     @OneToOne 
-    private Chamado chamado;
+    private Ticket ticket;
 
     @OneToOne 
-    private Usuario autor;
+    private User author;
 }

@@ -1,33 +1,36 @@
 package br.ifrn.edu.sici.models;
 
 import java.util.List;
+
+import br.ifrn.edu.sici.enums.UserType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 
 @Entity 
-@Table(name = "tb_usuario")
-public class Usuario {
+@Table(name = "tb_user")
+@Getter 
+@Setter
+public class User {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long usuario_id;
+    private Long userId;
 
     @Column(nullable = false, length = 100)
-    private String nome;
+    private String name;
 
     @Column(nullable = false, length = 100, unique = true)
     private String email;
 
     @Column(nullable = false)
-    private int matricula;
+    private int registration;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TipoUsuario tipo;
+    private UserType type;
 
-    @OneToMany(mappedBy = "usuario")
-    private List<Chamado> chamados;
+    @OneToMany(mappedBy = "user")
+    private List<Ticket> tickets;
 }
 
-enum TipoUsuario{
-    TECNICO,
-    SOLICITANTE
-}
