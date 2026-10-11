@@ -2,16 +2,18 @@ package br.ifrn.edu.sici.services;
 
 import java.util.List;
 
+import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
+import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import br.ifrn.edu.sici.models.Ticket;
 import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.TicketRepository;
-import br.ifrn.edu.sici.services.UserService;
-import br.ifrn.edu.sici.services.CategoryService;
-import br.ifrn.edu.sici.DTOs.TicketRequestDTO;
+import br.ifrn.edu.sici.dtos.requests.TicketRequestDTO;
 import br.ifrn.edu.sici.enums.UserType;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 
 @Service
@@ -19,34 +21,47 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final UserService userService;
     private final CategoryService categoryService;
+    private final TicketMapper ticketMapper;
 
-    public TicketService(TicketRepository ticketRepository, UserService userService, CategoryService categoryService){
+    public TicketService(
+            TicketRepository ticketRepository,
+            UserService userService,
+            CategoryService categoryService,
+            TicketMapper ticketMapper
+    ){
         this.ticketRepository = ticketRepository;
         this.userService = userService;
         this.categoryService = categoryService;
+        this.ticketMapper = ticketMapper;
     }
 
-    public Ticket create(TicketRequestDTO data, Long requestId){
+    public TicketResponseDTO create(TicketRequestDTO data, Long requestId){
         User request = userService.findById(requestId);
 
         if(request.getType() != UserType.SOLICITANTE){
             throw new TypeUserDenied("O usuário não tem o perfil SOLICITANTE.");
         }
 
-        Category category = categoryService.findById(data.getCategoryId());
+        Category category = categoryService.findById(data.categoryId());
 
-        // return ticketRepository.save(data, request_id); // Needs implementation to convert DTO to Entity
-        return null; 
+        Ticket entity = ticketMapper.toEntity(data);
+
+        entity.setRequest(request);
+        entity.setCategory(category);
+
+        Ticket ticket = ticketRepository.save(entity);
+
+        return ticketMapper.toResponseDTO(ticket);
+
     }
 
-    public List<Ticket> listAll(){
+    public List<TicketResponseDTO> listAll(){
         return ticketRepository.findAll();
     }
 
 }
 
-
-// Estudar a criação de exceções
+@ResponseStatus(HttpStatus.FORBIDDEN)
 class TypeUserDenied extends RuntimeException{
     public TypeUserDenied(String message){
         super(message);

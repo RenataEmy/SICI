@@ -43,15 +43,15 @@ public class Ticket {
     private String solution;
 
     @ManyToOne
-    @JoinColumn(name = "request_id")
+    @JoinColumn(name = "requestId")
     private User request;
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "categoryId")
     private Category category;
 
     @ManyToOne
-    @JoinColumn(name = "tech_id", nullable = true)
+    @JoinColumn(name = "techId", nullable = true)
     private User tech;
 
 
