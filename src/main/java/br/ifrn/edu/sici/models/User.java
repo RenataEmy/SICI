@@ -30,7 +30,10 @@ public class User {
     @Column(nullable = false)
     private UserType type;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "tech")
     private List<Ticket> tickets;
+
+    @ManyToOne
+    private Sector sector;
 }
 

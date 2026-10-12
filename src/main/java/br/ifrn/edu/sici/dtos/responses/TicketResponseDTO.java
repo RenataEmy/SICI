@@ -16,10 +16,10 @@ public record TicketResponseDTO(
         Priority priority,
         Status status,
         LocalDateTime openDate,
-        Optional<LocalDateTime> closeDate,
+        LocalDateTime closeDate,
         String solution,
-        Category categoryId,
-        Optional<User> tech
-
+        Long requestId,
+        Long categoryId,
+        Long techId
     ) {
 }

@@ -39,7 +39,7 @@ public class Ticket {
     @Column(nullable = true)
     private LocalDateTime closeDate;
 
-    @Column(nullable = false, length = 300)
+    @Column(nullable = true, length = 300)
     private String solution;
 
     @ManyToOne

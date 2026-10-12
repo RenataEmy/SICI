@@ -8,7 +8,7 @@ import br.ifrn.edu.sici.models.Ticket;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
-    Ticket findByName(String name);
+    Ticket findTicketByTicketId(Long ticketId);
 
     
 }

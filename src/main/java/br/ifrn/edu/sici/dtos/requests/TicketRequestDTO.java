@@ -1,14 +1,15 @@
 package br.ifrn.edu.sici.dtos.requests;
 
-import br.ifrn.edu.sici.enums.Status;
+import br.ifrn.edu.sici.enums.Priority;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-import java.util.Optional;
 
 public record TicketRequestDTO(
     String title,
     String description,
     String location,
-    Optional<Status> priority,
-    Optional<Long> techId,
+    Priority priority,
+    @NotNull(message = "A categoria é obrigatória")
     Long categoryId
 ) {}

@@ -17,9 +17,9 @@ public class Interaction {
     @Column (nullable = false)
     private LocalTime dateTime;
 
-    @OneToOne 
+    @ManyToOne
     private Ticket ticket;
 
-    @OneToOne 
+    @ManyToOne
     private User author;
 }

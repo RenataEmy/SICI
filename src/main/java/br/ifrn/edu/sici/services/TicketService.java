@@ -49,6 +49,10 @@ public class TicketService {
         entity.setRequest(request);
         entity.setCategory(category);
 
+        if (data.priority() != null){
+            entity.setPriority(data.priority());
+        }
+
         Ticket ticket = ticketRepository.save(entity);
 
         return ticketMapper.toResponseDTO(ticket);
@@ -56,7 +60,8 @@ public class TicketService {
     }
 
     public List<TicketResponseDTO> listAll(){
-        return ticketRepository.findAll();
+       // return ticketRepository.findAll();
+        return null;
     }
 
 }

@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 @Repository 
 public interface CategoryRepository extends JpaRepository<Category, Long>{
 
-    Category findByCategory_id(Long id); 
+    Category findCategoryByCategoryId(Long id);
 
     
 }
