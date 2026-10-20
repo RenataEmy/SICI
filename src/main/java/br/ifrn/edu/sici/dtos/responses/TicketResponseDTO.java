@@ -2,11 +2,9 @@ package br.ifrn.edu.sici.dtos.responses;
 
 import br.ifrn.edu.sici.enums.Priority;
 import br.ifrn.edu.sici.enums.Status;
-import br.ifrn.edu.sici.models.Category;
-import br.ifrn.edu.sici.models.User;
+
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 public record TicketResponseDTO(
         Long ticketId,

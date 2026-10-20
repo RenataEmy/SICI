@@ -1,25 +1,34 @@
 package br.ifrn.edu.sici.services;
 
 import br.ifrn.edu.sici.dtos.requests.TicketRequestDTO;
+import br.ifrn.edu.sici.dtos.responses.InteractionResponseDTO;
+import br.ifrn.edu.sici.dtos.responses.TicketDetailResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
 import br.ifrn.edu.sici.enums.Priority;
 import br.ifrn.edu.sici.enums.Status;
 import br.ifrn.edu.sici.enums.UserType;
 import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
+import br.ifrn.edu.sici.models.Interaction;
 import br.ifrn.edu.sici.models.Ticket;
 import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.TicketRepository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,11 +48,16 @@ class TicketServiceTest {
     @Mock
     private CategoryService categoryService;
 
-    @Mock
-    private TicketMapper ticketMapper;
+    @Spy
+    private TicketMapper ticketMapper = Mappers.getMapper(TicketMapper.class);
 
     @InjectMocks
     private TicketService ticketService;
+
+    @BeforeEach
+    void setup(){
+
+    }
 
     @Test
     @DisplayName("Should create ticket successfully when everything is ok.")
@@ -103,6 +117,8 @@ class TicketServiceTest {
 
         TicketResponseDTO result = ticketService.create(requestDTO, requestId);
 
+        System.out.println("Dados retornados: " + result.toString());
+
         // 4. VERIFICAR
         assertNotNull(result);
         assertEquals(responseDTO, result);
@@ -117,6 +133,69 @@ class TicketServiceTest {
     @Test
     @DisplayName("Should create ticket failed when user not is tech")
     void createTicketFailed(){
+
+    }
+
+    @Test
+    void getTicket() {
+        Long ticketId = 1L;
+
+        User mockAuthor = new User();
+        mockAuthor.setUserId(1L);
+        mockAuthor.setType(UserType.SOLICITANTE);
+
+        Category mockCategory = new Category();
+        mockCategory.setCategoryId(1L);
+
+        Ticket mockTicket = new Ticket();
+        mockTicket.setTicketId(ticketId);
+        mockTicket.setTitle("Piso molhado");
+        mockTicket.setDescription("Piso foi molhado por aluno");
+        mockTicket.setLocation("Sala 47");
+        mockTicket.setPriority(Priority.MEDIA);
+        mockTicket.setStatus(Status.ABERTO);
+        mockTicket.setOpenDate(LocalDateTime.of(2026, 10, 12, 10, 0)); // Faltava isso
+        mockTicket.setCategory(mockCategory);
+        mockTicket.setRequest(mockAuthor);
+
+        Interaction mockInteraction = new Interaction();
+        mockInteraction.setInteractionId(1L);
+        mockInteraction.setText("Interação 1");
+        mockInteraction.setDateTime(LocalDateTime.of(2026, 10, 15, 10, 0));
+        mockInteraction.setAuthor(mockAuthor);
+        mockInteraction.setTicket(mockTicket);
+
+        mockTicket.setInteractions(List.of(mockInteraction));
+
+        InteractionResponseDTO responseInteDTO = new InteractionResponseDTO(
+                mockInteraction.getInteractionId(),
+                mockInteraction.getText(),
+                mockInteraction.getDateTime(),
+                mockInteraction.getAuthor().getUserId()
+        );
+
+        TicketDetailResponseDTO responseDTO = new TicketDetailResponseDTO(
+                1L,
+                "Piso molhado",
+                "Piso foi molhado por aluno",
+                "Sala 47",
+                Priority.MEDIA,
+                Status.ABERTO,
+                LocalDateTime.of(2026, 10, 12, 10, 0),
+                null,
+                null,
+                1L,
+                1L,
+                null,
+                List.of(responseInteDTO)
+        );
+
+        TicketDetailResponseDTO result = ticketMapper.toDetailDTO(mockTicket);
+
+        System.out.println(result.toString());
+        assertNotNull(result);
+        assertEquals(responseDTO, result);
+
 
     }
 }

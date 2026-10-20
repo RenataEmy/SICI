@@ -1,10 +1,11 @@
 package br.ifrn.edu.sici.services;
 
-import java.util.List;
-
+import br.ifrn.edu.sici.dtos.responses.TicketDetailResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
 import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -59,9 +60,17 @@ public class TicketService {
 
     }
 
-    public List<TicketResponseDTO> listAll(){
-       // return ticketRepository.findAll();
-        return null;
+    // Preciso adicionar filtros opcionais
+    public Page<TicketResponseDTO> listAll(Pageable pageable){
+        Page<Ticket> pagesTickets = ticketRepository.findAll(pageable);
+        return pagesTickets.map(ticket -> ticketMapper.toResponseDTO(ticket));
+    }
+
+    public TicketDetailResponseDTO getTicket(Long ticketId){
+        Ticket ticket = ticketRepository.findByTicketId(ticketId)
+                .orElseThrow(() -> new TypeNotFound("Chamado não localizado com esse identificador"));
+
+        return ticketMapper.toDetailDTO(ticket);
     }
 
 }
@@ -71,4 +80,9 @@ class TypeUserDenied extends RuntimeException{
     public TypeUserDenied(String message){
         super(message);
     }
+}
+
+@ResponseStatus(HttpStatus.NOT_FOUND)
+class TypeNotFound extends RuntimeException{
+    public TypeNotFound(String message){ super(message);}
 }
