@@ -14,6 +14,7 @@ import br.ifrn.edu.sici.models.Ticket;
 import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.TicketRepository;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,13 +56,13 @@ class TicketServiceTest {
     private TicketService ticketService;
 
     @BeforeEach
-    void setup(){
+    void setup() {
 
     }
 
     @Test
     @DisplayName("Should create ticket successfully when everything is ok.")
-    void createTicketSuccess() throws Exception{
+    void createTicketSuccess() throws Exception {
         // 1. PREPARAR OS DADOS
         TicketRequestDTO requestDTO = new TicketRequestDTO(
                 "Piso molhado",
@@ -132,12 +133,12 @@ class TicketServiceTest {
 
     @Test
     @DisplayName("Should create ticket failed when user not is tech")
-    void createTicketFailed(){
+    void createTicketFailed() {
 
     }
 
     @Test
-    void getTicket() {
+    void getTicketSucess() {
         Long ticketId = 1L;
 
         User mockAuthor = new User();
@@ -190,11 +191,35 @@ class TicketServiceTest {
                 List.of(responseInteDTO)
         );
 
-        TicketDetailResponseDTO result = ticketMapper.toDetailDTO(mockTicket);
+        when(ticketRepository.findByTicketId(ticketId)).thenReturn(Optional.of(mockTicket));
+
+        TicketDetailResponseDTO result = ticketService.getTicket(ticketId);
 
         System.out.println(result.toString());
         assertNotNull(result);
         assertEquals(responseDTO, result);
+
+        verify(ticketRepository, times(1)).findByTicketId(ticketId);
+
+
+    }
+
+
+    @Test
+    @DisplayName("Should not found ticket with id")
+    void getTicketFailed(){
+        Long ticketId = 2L;
+
+        when(ticketRepository.findByTicketId(ticketId)).thenReturn(Optional.empty());
+
+        Exception thrown = Assertions.assertThrows(Exception.class, () -> {
+            TicketDetailResponseDTO result = ticketService.getTicket(ticketId);
+        });
+
+
+        Assertions.assertEquals("Chamado não localizado com esse identificador", thrown.getMessage());
+
+        verify(ticketRepository, times(1)).findByTicketId(ticketId);
 
 
     }
