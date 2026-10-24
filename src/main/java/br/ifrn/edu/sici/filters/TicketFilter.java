@@ -18,17 +18,16 @@ public class TicketFilter {
     private Long categoryId;
     private Long requestId;
     private Long techId;
-    private LocalDateTime openDate;
-    private LocalDateTime closeDate;
+    private LocalDateTime openDateStart;
+    private LocalDateTime openDateEnd;
 
-    public Specification<Ticket> toSpecification(){
+    public Specification<Ticket> toSpecification() {
         return statusEquals(status)
                 .and(priorityEquals(priority))
                 .and(sectorEquals(sectorId))
                 .and(categoryEquals(categoryId))
                 .and(requestEquals(requestId))
                 .and(techEquals(techId))
-                .and(openDateEquals(openDate))
-                .and(closeDateEquals(closeDate));
+                .and(openDateBetween(openDateStart, openDateEnd));
     }
 }

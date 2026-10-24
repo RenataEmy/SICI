@@ -9,6 +9,8 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 
+import static javax.management.Query.or;
+
 public class TicketSpec {
 
     public static Specification<Ticket> statusEquals(Status status) {
@@ -66,21 +68,18 @@ public class TicketSpec {
         };
     }
 
-    public static Specification<Ticket> openDateEquals(LocalDateTime openDate) {
+    public static Specification<Ticket> openDateBetween(LocalDateTime start, LocalDateTime end) {
         return (root, query, builder) -> {
-            if (ObjectUtils.isEmpty(openDate)) {
+            if (ObjectUtils.isEmpty(start)){
                 return null;
             }
-            return builder.equal(root.get("openDate"), openDate);
+            if(ObjectUtils.isEmpty(end)){
+                return null;
+            }
+            return builder.between(root.get("openDate"), start, end);
         };
     }
 
-    public static Specification<Ticket> closeDateEquals(LocalDateTime closeDate) {
-        return (root, query, builder) -> {
-            if (ObjectUtils.isEmpty(closeDate)) {
-                return null;
-            }
-            return builder.equal(root.get("openDate"), closeDate);
-        };
-    }
+
+
 }
