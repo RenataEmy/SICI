@@ -2,10 +2,12 @@ package br.ifrn.edu.sici.services;
 
 import br.ifrn.edu.sici.dtos.responses.TicketDetailResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
+import br.ifrn.edu.sici.filters.TicketFilter;
 import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -60,15 +62,19 @@ public class TicketService {
 
     }
 
-    // Preciso adicionar filtros opcionais
-    public Page<TicketResponseDTO> listAll(Pageable pageable){
-        Page<Ticket> pagesTickets = ticketRepository.findAll(pageable);
-        return pagesTickets.map(ticket -> ticketMapper.toResponseDTO(ticket));
+    public Page<TicketResponseDTO> listAll(TicketFilter ticketFilter, Pageable pageable){
+        Page<Ticket> ticketsPage = ticketRepository.findAll(ticketFilter.toSpecification(), pageable);
+
+        if (ticketsPage.isEmpty()){
+            throw new TicketNotFound("Nenhum chamado localizado");
+        }
+
+        return ticketsPage.map(ticketMapper::toResponseDTO);
     }
 
     public TicketDetailResponseDTO getTicket(Long ticketId){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
-                .orElseThrow(() -> new TypeNotFound("Chamado não localizado com esse identificador"));
+                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
 
         return ticketMapper.toDetailDTO(ticket);
     }
@@ -83,6 +89,6 @@ class TypeUserDenied extends RuntimeException{
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-class TypeNotFound extends RuntimeException{
-    public TypeNotFound(String message){ super(message);}
+class TicketNotFound extends RuntimeException{
+    public TicketNotFound(String message){ super(message);}
 }
