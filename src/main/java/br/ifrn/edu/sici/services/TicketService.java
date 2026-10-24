@@ -131,6 +131,27 @@ public class TicketService {
         return ticketMapper.toResolvedDTO(ticket);
     }
 
+    public String cancel(Long ticketId, Long requestId){
+        Ticket ticket = ticketRepository.findByTicketId(ticketId)
+                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+
+        User tech = userService.findById(requestId);
+
+        if(!ticket.getRequest().getUserId().equals(requestId)){
+            throw new RuleConflit("Apenas o solicitante pode cancelar este chamado");
+        }
+
+        if (ticket.getStatus() != Status.ABERTO){
+            throw new RuleConflit("Não é possível cancelar um chamado que esteja em andamento");
+        }
+
+        ticket.setStatus(Status.CANCELADO);
+
+        ticket = ticketRepository.save(ticket);
+
+        return "Chamado cancelado com sucesso";
+    }
+
 }
 
 @ResponseStatus(HttpStatus.FORBIDDEN)
