@@ -34,6 +34,7 @@ public class User {
     private List<Ticket> tickets;
 
     @ManyToOne
+    @JoinColumn(name = "sectorId")
     private Sector sector;
 }
 
