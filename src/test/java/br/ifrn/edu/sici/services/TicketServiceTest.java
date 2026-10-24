@@ -223,4 +223,9 @@ class TicketServiceTest {
 
 
     }
+
+    @Test
+    @DisplayName("Should be tech to assum ticket with success")
+    void takeTicketSuccess() {
+    }
 }

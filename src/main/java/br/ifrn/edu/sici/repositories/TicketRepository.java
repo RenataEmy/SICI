@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import br.ifrn.edu.sici.models.Ticket;
@@ -21,4 +22,6 @@ public interface TicketRepository extends
     @EntityGraph(attributePaths = {"interactions"})
     Optional<Ticket> findByTicketId(Long ticketId);
 
+    @Query("SELECT t.status FROM Ticket t WHERE t.ticketId = :ticketId")
+    Optional<Ticket> findStatusById(Long ticketId);
 }
