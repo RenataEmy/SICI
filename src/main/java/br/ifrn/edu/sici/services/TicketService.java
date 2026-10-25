@@ -83,14 +83,14 @@ public class TicketService {
         return ticketsPage.map(ticketMapper::toResponseDTO);
     }
 
-    public TicketDetailResponseDTO getTicket(Long ticketId){
+    public TicketDetailResponseDTO get(Long ticketId){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
                 .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
 
         return ticketMapper.toDetailDTO(ticket);
     }
 
-    public TicketResponseDTO takeTicket(Long ticketId, Long techId){
+    public TicketResponseDTO take(Long ticketId, Long techId){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
                 .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
 
@@ -119,7 +119,7 @@ public class TicketService {
 
     }
 
-    public TicketResolvedDTO resolve(Long ticketId, TicketResolvedDTO data){
+    public TicketResponseDTO resolve(Long ticketId, TicketResolvedDTO data){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
                 .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
 
@@ -134,7 +134,7 @@ public class TicketService {
 
         ticket = ticketRepository.save(ticket);
 
-        return ticketMapper.toResolvedDTO(ticket);
+        return ticketMapper.toResponseDTO(ticket);
     }
 
     public String cancel(Long ticketId, Long requestId){
@@ -179,7 +179,7 @@ public class TicketService {
 
         Interaction interaction = interactionService.create(entity);
 
-        return ticketMapper.toInteractionDTO(entity);
+        return ticketMapper.toInteractionDTO(interaction);
 
     }
 }
