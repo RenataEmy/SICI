@@ -5,6 +5,8 @@ import br.ifrn.edu.sici.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CategoryService {
     private final CategoryRepository categoryRepository;
@@ -15,5 +17,9 @@ public class CategoryService {
 
     public Category findById(Long categoryId){
         return categoryRepository.findById(categoryId).orElseThrow(() -> new EntityNotFoundException("Categoria não existe"));
+    }
+
+    public List<Category> findAll(List<Long> categoriesId){
+        return categoryRepository.findAllById(categoriesId);
     }
 }

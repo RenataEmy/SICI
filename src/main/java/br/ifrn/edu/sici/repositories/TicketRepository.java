@@ -24,4 +24,6 @@ public interface TicketRepository extends
 
     @Query("SELECT t.status FROM Ticket t WHERE t.ticketId = :ticketId")
     Optional<Ticket> findStatusById(Long ticketId);
+
+    boolean existsByCategorySectorSectorId(Long sectorId);
 }

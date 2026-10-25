@@ -10,6 +10,7 @@ import br.ifrn.edu.sici.filters.TicketFilter;
 import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
 import br.ifrn.edu.sici.models.Interaction;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -49,6 +50,11 @@ public class TicketService {
         this.interactionService = interactionService;
     }
 
+    public boolean verify(Long sectorId){
+        return ticketRepository.existsByCategorySectorSectorId(sectorId);
+    }
+
+    @Transactional
     public TicketResponseDTO create(TicketRequestDTO data, Long requestId){
         User request = userService.findById(requestId);
 
@@ -77,7 +83,7 @@ public class TicketService {
         Page<Ticket> ticketsPage = ticketRepository.findAll(ticketFilter.toSpecification(), pageable);
 
         if (ticketsPage.isEmpty()){
-            throw new TicketNotFound("Nenhum chamado localizado");
+            throw new ResourceNotFoundException("Nenhum chamado localizado");
         }
 
         return ticketsPage.map(ticketMapper::toResponseDTO);
@@ -85,14 +91,15 @@ public class TicketService {
 
     public TicketDetailResponseDTO get(Long ticketId){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
-                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
         return ticketMapper.toDetailDTO(ticket);
     }
 
+    @Transactional
     public TicketResponseDTO take(Long ticketId, Long techId){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
-                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
         User tech = userService.findById(techId);
 
@@ -119,9 +126,10 @@ public class TicketService {
 
     }
 
+    @Transactional
     public TicketResponseDTO resolve(Long ticketId, TicketResolvedDTO data){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
-                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
         User tech = userService.findById(data.techId());
 
@@ -137,9 +145,10 @@ public class TicketService {
         return ticketMapper.toResponseDTO(ticket);
     }
 
+    @Transactional
     public String cancel(Long ticketId, Long requestId){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
-                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
         User tech = userService.findById(requestId);
 
@@ -158,9 +167,10 @@ public class TicketService {
         return "Chamado cancelado com sucesso";
     }
 
+    @Transactional
     public InteractionResponseDTO interactions(Long ticketId, Long userId, InteractionRequestDTO data){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
-                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
         User user = userService.findById(userId);
 
@@ -192,8 +202,8 @@ class TypeUserDenied extends RuntimeException{
 }
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-class TicketNotFound extends RuntimeException{
-    public TicketNotFound(String message){ super(message);}
+class ResourceNotFoundException extends RuntimeException{
+    public ResourceNotFoundException(String message){ super(message);}
 }
 
 @ResponseStatus(HttpStatus.CONFLICT)

@@ -5,6 +5,8 @@ import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.util.List;
+
 @Service 
 public class UserService {
     private final UserRepository userRepository;
@@ -15,5 +17,9 @@ public class UserService {
 
     public User findById(Long userId){
         return userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuário não existe"));
+    }
+
+    public List<User> findAll(List<Long> techsId){
+        return userRepository.findAllById(techsId);
     }
 }
