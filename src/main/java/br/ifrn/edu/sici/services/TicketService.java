@@ -1,12 +1,15 @@
 package br.ifrn.edu.sici.services;
 
+import br.ifrn.edu.sici.dtos.requests.InteractionRequestDTO;
 import br.ifrn.edu.sici.dtos.requests.TicketResolvedDTO;
+import br.ifrn.edu.sici.dtos.responses.InteractionResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketDetailResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
 import br.ifrn.edu.sici.enums.Status;
 import br.ifrn.edu.sici.filters.TicketFilter;
 import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
+import br.ifrn.edu.sici.models.Interaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -30,17 +33,20 @@ public class TicketService {
     private final UserService userService;
     private final CategoryService categoryService;
     private final TicketMapper ticketMapper;
+    private final InteractionService interactionService;
 
     public TicketService(
             TicketRepository ticketRepository,
             UserService userService,
             CategoryService categoryService,
-            TicketMapper ticketMapper
+            TicketMapper ticketMapper,
+            InteractionService interactionService
     ){
         this.ticketRepository = ticketRepository;
         this.userService = userService;
         this.categoryService = categoryService;
         this.ticketMapper = ticketMapper;
+        this.interactionService = interactionService;
     }
 
     public TicketResponseDTO create(TicketRequestDTO data, Long requestId){
@@ -152,6 +158,30 @@ public class TicketService {
         return "Chamado cancelado com sucesso";
     }
 
+    public InteractionResponseDTO interactions(Long ticketId, Long userId, InteractionRequestDTO data){
+        Ticket ticket = ticketRepository.findByTicketId(ticketId)
+                .orElseThrow(() -> new TicketNotFound("Chamado não localizado com esse identificador"));
+
+        User user = userService.findById(userId);
+
+        if (!user.getUserId().equals(ticket.getRequest().getUserId()) &&
+                !user.getUserId().equals(ticket.getTech().getUserId())){
+            throw new RuleConflit("Apenas o solicitante e o técnico atribuídos podem registrar interações no chamado");
+        }
+
+        if(ticket.getStatus().equals(Status.CANCELADO) || ticket.getStatus().equals(Status.RESOLVIDO)){
+            throw new RuleConflit("Chamados RESOLVIDOS ou CANCELADOS não aceitam alterações nem novas interações");
+        }
+
+        Interaction entity = ticketMapper.toEntityInteraction(data);
+
+        entity.setAuthor(user);
+
+        Interaction interaction = interactionService.create(entity);
+
+        return ticketMapper.toInteractionDTO(entity);
+
+    }
 }
 
 @ResponseStatus(HttpStatus.FORBIDDEN)

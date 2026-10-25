@@ -19,7 +19,7 @@ public class Interaction {
     private String text;
 
     @Column (nullable = false)
-    private LocalDateTime dateTime;
+    private LocalDateTime dateTime = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "ticketId")

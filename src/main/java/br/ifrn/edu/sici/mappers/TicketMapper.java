@@ -1,5 +1,6 @@
 package br.ifrn.edu.sici.mappers;
 
+import br.ifrn.edu.sici.dtos.requests.InteractionRequestDTO;
 import br.ifrn.edu.sici.dtos.requests.TicketResolvedDTO;
 import br.ifrn.edu.sici.dtos.responses.InteractionResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketDetailResponseDTO;
@@ -25,6 +26,9 @@ public interface TicketMapper {
     TicketDetailResponseDTO toDetailDTO(Ticket ticket);
 
     TicketResolvedDTO toResolvedDTO(Ticket ticket);
+
+    @Mapping(source = "ticket.ticketId", target = "ticketId")
+    Interaction toEntityInteraction(InteractionRequestDTO interaction);
 
     @Mapping(source = "author.userId", target = "authorId")
     InteractionResponseDTO toInteractionDTO(Interaction interaction);
