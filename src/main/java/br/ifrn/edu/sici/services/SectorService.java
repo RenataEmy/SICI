@@ -111,7 +111,7 @@ public class SectorService {
         }
 
         if (data.techsId() != null) {
-            List<User> techs = userService.findAll(data.techsId());
+            List<User> techs = userService.findAllTechs(data.techsId());
 
             sector.getTechs().clear();
             sector.getTechs().addAll(techs);

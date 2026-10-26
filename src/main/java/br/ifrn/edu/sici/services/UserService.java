@@ -14,7 +14,7 @@ import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service 
@@ -53,7 +53,14 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuário não existe"));
     }
 
-    public List<User> findAll(List<Long> techsId){
+    public UserResponseDTO get(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não existe"));
+        return userMapper.toResponse(user);
+    }
+
+
+    public List<User> findAllTechs(List<Long> techsId){
         return userRepository.findAllById(techsId);
     }
 
