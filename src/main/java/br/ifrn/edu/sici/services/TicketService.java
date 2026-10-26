@@ -25,6 +25,7 @@ import br.ifrn.edu.sici.enums.UserType;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -77,6 +78,11 @@ public class TicketService {
 
         return ticketMapper.toResponseDTO(ticket);
 
+    }
+
+    public List<Ticket> findAll(List<Long> ticketsId){
+        List<Ticket> tickets = ticketRepository.findAllById(ticketsId);
+        return tickets;
     }
 
     public Page<TicketResponseDTO> listAll(TicketFilter ticketFilter, Pageable pageable){

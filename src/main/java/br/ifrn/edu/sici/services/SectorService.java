@@ -65,6 +65,11 @@ public class SectorService {
         return sectorMapper.toResponse(newSector);
     }
 
+    public Sector findId(Long sectorId){
+        Optional<Sector> sector = Optional.of(sectorRepository.findById(sectorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Setor não encontrado")));
+    }
+
     public SectorResponseDTO get(Long sectorId){
         Sector sector = sectorRepository.findById(sectorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Não foi localizado nenhum setor com essa identificação"));
