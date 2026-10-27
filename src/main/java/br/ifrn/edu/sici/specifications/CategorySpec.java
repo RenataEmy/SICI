@@ -6,12 +6,12 @@ import org.springframework.util.ObjectUtils;
 
 public class CategorySpec {
 
-    public static Specification<Category> nameEquals(String name){
+    public static Specification<Category> nameContains(String name){
         return (root, query, builder) -> {
             if (ObjectUtils.isEmpty(name)){
                 return null;
             }
-            return builder.equal(root.get("name"), name);
+            return builder.like(builder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
         };
     }
 
@@ -20,7 +20,7 @@ public class CategorySpec {
             if(ObjectUtils.isEmpty(sectorId)){
                 return null;
             }
-            return builder.equal(root.get("sectorId"), sectorId);
+            return builder.equal(root.join("sector").get("sectorId"), sectorId);
         };
     }
 }
