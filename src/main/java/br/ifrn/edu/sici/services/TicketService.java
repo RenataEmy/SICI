@@ -139,7 +139,7 @@ public class TicketService {
 
         User tech = userService.findById(data.techId());
 
-        if (!tech.getUserId().equals(data.techId())){
+        if (!ticket.getTech().getUserId().equals(tech.getUserId())){
             throw new RuleConflit("Apenas o técnico responsável pode encerrar o chamado");
         }
 

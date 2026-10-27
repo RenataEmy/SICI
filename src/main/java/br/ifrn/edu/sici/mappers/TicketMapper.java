@@ -27,7 +27,7 @@ public interface TicketMapper {
 
     TicketResolvedDTO toResolvedDTO(Ticket ticket);
 
-    @Mapping(source = "ticket.ticketId", target = "ticketId")
+    @Mapping(source = "ticketId", target = "ticket.ticketId")
     Interaction toEntityInteraction(InteractionRequestDTO interaction);
 
     @Mapping(source = "author.userId", target = "authorId")

@@ -16,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Optional;
 
 @Service 
 public class UserService {
@@ -37,7 +38,7 @@ public class UserService {
     public UserResponseDTO create(UserRequestDTO data){
         boolean isEmail = userRepository.existsByEmail(data.email());
 
-        if(!isEmail){
+        if(isEmail){
             throw new RuleConflit("Já existe usuário com esse e-mail cadastrado");
         }
 
@@ -81,7 +82,7 @@ public class UserService {
 
         boolean isEmail = userRepository.existsByEmail(data.email());
 
-        if(!isEmail){
+        if(isEmail){
             throw new RuleConflit("Já existe usuário com esse e-mail cadastrado");
         }
 

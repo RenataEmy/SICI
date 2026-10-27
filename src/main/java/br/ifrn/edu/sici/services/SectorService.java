@@ -66,8 +66,9 @@ public class SectorService {
     }
 
     public Sector findId(Long sectorId){
-        Optional<Sector> sector = Optional.of(sectorRepository.findById(sectorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Setor não encontrado")));
+         Sector sector = sectorRepository.findById(sectorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Setor não encontrado"));
+         return sector;
     }
 
     public SectorResponseDTO get(Long sectorId){

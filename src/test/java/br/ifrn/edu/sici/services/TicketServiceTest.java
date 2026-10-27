@@ -193,7 +193,7 @@ class TicketServiceTest {
 
         when(ticketRepository.findByTicketId(ticketId)).thenReturn(Optional.of(mockTicket));
 
-        TicketDetailResponseDTO result = ticketService.getTicket(ticketId);
+        TicketDetailResponseDTO result = ticketService.get(ticketId);
 
         System.out.println(result.toString());
         assertNotNull(result);
@@ -213,7 +213,7 @@ class TicketServiceTest {
         when(ticketRepository.findByTicketId(ticketId)).thenReturn(Optional.empty());
 
         Exception thrown = Assertions.assertThrows(Exception.class, () -> {
-            TicketDetailResponseDTO result = ticketService.getTicket(ticketId);
+            TicketDetailResponseDTO result = ticketService.get(ticketId);
         });
 
 
