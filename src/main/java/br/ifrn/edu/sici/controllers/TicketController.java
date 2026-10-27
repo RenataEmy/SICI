@@ -27,11 +27,8 @@ public class TicketController {
     }
 
     @PostMapping
-    public ResponseEntity<TicketResponseDTO> create(
-            @RequestBody @Valid TicketRequestDTO requestDto,
-            @RequestBody @Valid Long userId
-    ) {
-        TicketResponseDTO responseDto = ticketService.create(requestDto, userId);
+    public ResponseEntity<TicketResponseDTO> create(@RequestBody @Valid TicketRequestDTO requestDto) {
+        TicketResponseDTO responseDto = ticketService.create(requestDto);
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -87,11 +84,10 @@ public class TicketController {
     @PostMapping("/{id}/interacoes")
     public ResponseEntity<InteractionResponseDTO> interaction(
             @PathVariable Long id,
-            @RequestBody Long userId,
             @RequestBody @Valid InteractionRequestDTO requestDTO
             ){
 
-        InteractionResponseDTO responseDTO = ticketService.interactions(id, userId, requestDTO);
+        InteractionResponseDTO responseDTO = ticketService.interactions(id, requestDTO);
 
         return ResponseEntity.ok(responseDTO);
     }

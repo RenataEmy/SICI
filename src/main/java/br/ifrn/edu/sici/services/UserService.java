@@ -7,31 +7,32 @@ import br.ifrn.edu.sici.filters.UserFilter;
 import br.ifrn.edu.sici.mappers.UserMapper;
 import br.ifrn.edu.sici.models.Sector;
 import br.ifrn.edu.sici.models.Ticket;
+import br.ifrn.edu.sici.repositories.TicketRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
+import br.ifrn.edu.sici.exceptions.ResourceNotFoundException;
+import br.ifrn.edu.sici.exceptions.RuleConflit;
 
 import org.springframework.data.domain.Pageable;
 import java.util.List;
-import java.util.Optional;
 
 @Service 
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final SectorService sectorService;
-    private final TicketService ticketService;
+    private final TicketRepository ticketRepository;
 
     public UserService(UserRepository userRepository,
                        UserMapper userMapper,
-                       SectorService sectorService, TicketService ticketService){
+                       SectorService sectorService, TicketRepository ticketRepository){
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.sectorService = sectorService;
-        this.ticketService = ticketService;
+        this.ticketRepository = ticketRepository;
     }
 
     @Transactional
@@ -44,6 +45,15 @@ public class UserService {
 
         User newUser = userMapper.toEntity(data);
 
+        if (data.sectorId() != null) newUser.setSector(sectorService.findId(data.sectorId()));
+        if (data.ticketsId() != null) {
+            if (newUser.getType() != UserType.TECNICO) throw new RuleConflit("Somente usuários técnicos podem receber chamados");
+            List<Ticket> tickets = ticketRepository.findAllById(data.ticketsId());
+            if (tickets.size() != data.ticketsId().size()) throw new ResourceNotFoundException("Um ou mais chamados não foram encontrados");
+            newUser.setTickets(new java.util.ArrayList<>(tickets));
+            tickets.forEach(ticket -> ticket.setTech(newUser));
+        }
+
         newUser = userRepository.save(newUser);
 
         return userMapper.toResponse(newUser);
@@ -51,18 +61,22 @@ public class UserService {
     }
 
     public User findById(Long userId){
-        return userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("Usuário não existe"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("Usuário não existe"));
     }
 
     public UserResponseDTO get(Long userId){
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não existe"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não existe"));
         return userMapper.toResponse(user);
     }
 
 
     public List<User> findAllTechs(List<Long> techsId){
-        return userRepository.findAllById(techsId);
+        List<User> users = userRepository.findAllById(techsId);
+        if (users.size() != techsId.size() || users.stream().anyMatch(user -> user.getType() != UserType.TECNICO)) {
+            throw new ResourceNotFoundException("Um ou mais técnicos não foram encontrados");
+        }
+        return users;
     }
 
     public Page<UserResponseDTO> findWithFilters(UserFilter userFilter, Pageable pageable){
@@ -80,7 +94,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        boolean isEmail = userRepository.existsByEmail(data.email());
+        boolean isEmail = userRepository.existsByEmailAndUserIdNot(data.email(), userId);
 
         if(isEmail){
             throw new RuleConflit("Já existe usuário com esse e-mail cadastrado");
@@ -102,12 +116,16 @@ public class UserService {
         }
 
         if (data.ticketsId() != null) {
-            List<Ticket> tickets = ticketService.findAll(data.ticketsId());
+            if (user.getType() != UserType.TECNICO) throw new RuleConflit("Somente usuários técnicos podem receber chamados");
+            List<Ticket> tickets = ticketRepository.findAllById(data.ticketsId());
+            if (tickets.size() != data.ticketsId().size()) throw new ResourceNotFoundException("Um ou mais chamados não foram encontrados");
 
-            //tickets.forEach(ticket -> ticket.setTech(userId));
+            if (user.getTickets() != null) {
+                user.getTickets().stream().filter(ticket -> !tickets.contains(ticket)).forEach(ticket -> ticket.setTech(null));
+            }
+            tickets.forEach(ticket -> ticket.setTech(user));
 
-            user.getTickets().clear();
-            user.getTickets().addAll(tickets);
+            user.setTickets(new java.util.ArrayList<>(tickets));
         }
 
         user = userRepository.save(user);

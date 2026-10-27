@@ -6,15 +6,18 @@ import br.ifrn.edu.sici.dtos.responses.InteractionResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketDetailResponseDTO;
 import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
 import br.ifrn.edu.sici.enums.Status;
+import br.ifrn.edu.sici.enums.Priority;
 import br.ifrn.edu.sici.filters.TicketFilter;
 import br.ifrn.edu.sici.mappers.TicketMapper;
 import br.ifrn.edu.sici.models.Category;
 import br.ifrn.edu.sici.models.Interaction;
+import br.ifrn.edu.sici.exceptions.ResourceNotFoundException;
+import br.ifrn.edu.sici.exceptions.RuleConflit;
+import br.ifrn.edu.sici.exceptions.TypeUserDenied;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import br.ifrn.edu.sici.models.Ticket;
@@ -22,11 +25,9 @@ import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.TicketRepository;
 import br.ifrn.edu.sici.dtos.requests.TicketRequestDTO;
 import br.ifrn.edu.sici.enums.UserType;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -56,8 +57,8 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketResponseDTO create(TicketRequestDTO data, Long requestId){
-        User request = userService.findById(requestId);
+    public TicketResponseDTO create(TicketRequestDTO data){
+        User request = userService.findById(data.requestId());
 
         if(request.getType() != UserType.SOLICITANTE){
             throw new TypeUserDenied("O usuário não tem o perfil SOLICITANTE.");
@@ -72,12 +73,19 @@ public class TicketService {
 
         if (data.priority() != null){
             entity.setPriority(data.priority());
+        } else {
+            entity.setPriority(Priority.MEDIA);
         }
 
         Ticket ticket = ticketRepository.save(entity);
 
         return ticketMapper.toResponseDTO(ticket);
 
+    }
+
+    public TicketResponseDTO create(TicketRequestDTO data, Long requestId) {
+        TicketRequestDTO request = new TicketRequestDTO(data.title(), data.description(), data.location(), data.priority(), data.categoryId(), requestId);
+        return create(request);
     }
 
     public List<Ticket> findAll(List<Long> ticketsId){
@@ -109,12 +117,16 @@ public class TicketService {
 
         User tech = userService.findById(techId);
 
-        Long sectorCategory = ticket.getCategory().getSector().getSectorId();
-        Long sectorTech = tech.getSector().getSectorId();
-
         if(tech.getType() != UserType.TECNICO){
             throw new TypeUserDenied("O usuário não tem o perfil TÉCNICO.");
         }
+
+        if (tech.getSector() == null || ticket.getCategory().getSector() == null) {
+            throw new RuleConflit("O técnico e a categoria do chamado devem estar vinculados a um setor");
+        }
+
+        Long sectorCategory = ticket.getCategory().getSector().getSectorId();
+        Long sectorTech = tech.getSector().getSectorId();
 
         if (ticket.getStatus() != Status.ABERTO){
             throw new RuleConflit("Não é possível assumir um chamado que esteja em andamento");
@@ -139,12 +151,18 @@ public class TicketService {
 
         User tech = userService.findById(data.techId());
 
-        if (!ticket.getTech().getUserId().equals(tech.getUserId())){
+        if (tech.getType() != UserType.TECNICO || ticket.getTech() == null
+                || !ticket.getTech().getUserId().equals(tech.getUserId())){
             throw new RuleConflit("Apenas o técnico responsável pode encerrar o chamado");
+        }
+
+        if (ticket.getStatus() != Status.EM_ATENDIMENTO) {
+            throw new RuleConflit("Apenas chamados em atendimento podem ser resolvidos");
         }
 
         ticket.setSolution(data.solution());
         ticket.setCloseDate(LocalDateTime.now());
+        ticket.setStatus(Status.RESOLVIDO);
 
         ticket = ticketRepository.save(ticket);
 
@@ -156,7 +174,7 @@ public class TicketService {
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
-        User tech = userService.findById(requestId);
+        userService.findById(requestId);
 
         if(!ticket.getRequest().getUserId().equals(requestId)){
             throw new RuleConflit("Apenas o solicitante pode cancelar este chamado");
@@ -174,14 +192,14 @@ public class TicketService {
     }
 
     @Transactional
-    public InteractionResponseDTO interactions(Long ticketId, Long userId, InteractionRequestDTO data){
+    public InteractionResponseDTO interactions(Long ticketId, InteractionRequestDTO data){
         Ticket ticket = ticketRepository.findByTicketId(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chamado não localizado com esse identificador"));
 
-        User user = userService.findById(userId);
+        User user = userService.findById(data.userId());
 
         if (!user.getUserId().equals(ticket.getRequest().getUserId()) &&
-                !user.getUserId().equals(ticket.getTech().getUserId())){
+                (ticket.getTech() == null || !user.getUserId().equals(ticket.getTech().getUserId()))){
             throw new RuleConflit("Apenas o solicitante e o técnico atribuídos podem registrar interações no chamado");
         }
 
@@ -192,27 +210,11 @@ public class TicketService {
         Interaction entity = ticketMapper.toEntityInteraction(data);
 
         entity.setAuthor(user);
+        entity.setTicket(ticket);
 
         Interaction interaction = interactionService.create(entity);
 
         return ticketMapper.toInteractionDTO(interaction);
 
     }
-}
-
-@ResponseStatus(HttpStatus.FORBIDDEN)
-class TypeUserDenied extends RuntimeException{
-    public TypeUserDenied(String message){
-        super(message);
-    }
-}
-
-@ResponseStatus(HttpStatus.NOT_FOUND)
-class ResourceNotFoundException extends RuntimeException{
-    public ResourceNotFoundException(String message){ super(message);}
-}
-
-@ResponseStatus(HttpStatus.CONFLICT)
-class RuleConflit extends RuntimeException{
-    public RuleConflit(String message){ super(message);}
 }

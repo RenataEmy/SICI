@@ -2,12 +2,17 @@ package br.ifrn.edu.sici.services;
 
 import br.ifrn.edu.sici.dtos.requests.SectorRequestDTO;
 import br.ifrn.edu.sici.dtos.responses.SectorResponseDTO;
-import br.ifrn.edu.sici.enums.UserType;
 import br.ifrn.edu.sici.mappers.SectorMapper;
 import br.ifrn.edu.sici.models.Category;
 import br.ifrn.edu.sici.models.Sector;
 import br.ifrn.edu.sici.models.User;
 import br.ifrn.edu.sici.repositories.SectorRepository;
+import br.ifrn.edu.sici.repositories.UserRepository;
+import br.ifrn.edu.sici.repositories.TicketRepository;
+import br.ifrn.edu.sici.repositories.CategoryRepository;
+import br.ifrn.edu.sici.exceptions.DatabaseException;
+import br.ifrn.edu.sici.exceptions.ResourceNotFoundException;
+import br.ifrn.edu.sici.exceptions.RuleConflit;
 import br.ifrn.edu.sici.specifications.SectorSpec;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,43 +27,55 @@ import java.util.Optional;
 @Service
 public class SectorService {
 
-    //POST, GET (lista e por id), PUT, DELETE em /setores
-
     private final SectorRepository sectorRepository;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final SectorMapper sectorMapper;
-    private final TicketService ticketService;
-    private final CategoryService categoryService;
+    private final TicketRepository ticketRepository;
+    private final CategoryRepository categoryRepository;
 
     public SectorService(
             SectorRepository sectorRepository,
-            UserService userService,
+            UserRepository userRepository,
             SectorMapper sectorMapper,
-            TicketService ticketService,
-            CategoryService categoryService,
-            SectorSpec sectorSpec
+            TicketRepository ticketRepository,
+            CategoryRepository categoryRepository
     ){
         this.sectorRepository = sectorRepository;
-        this.userService = userService;
+        this.userRepository = userRepository;
         this.sectorMapper = sectorMapper;
-        this.ticketService = ticketService;
-        this.categoryService = categoryService;
+        this.ticketRepository = ticketRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public SectorResponseDTO create(SectorRequestDTO data, Long adminId){
-        User admin = userService.findById(adminId);
+        User admin = userRepository.findById(adminId).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if (!admin.getType().equals(UserType.ADMINISTRADOR)){
+        if (admin.getType() != br.ifrn.edu.sici.enums.UserType.ADMINISTRADOR){
             throw new RuleConflit("Apenas usuário do tipo administrador pode cadastrar um setor");
         }
 
         Optional<Sector> entity = sectorRepository.findByAcronym(data.acronym());
 
-        if(entity.get().getAcronym().equals(data.acronym())){
+        if(entity.isPresent()){
             throw new RuleConflit("Já existe setor cadastrado com essa sigla");
         }
 
         Sector newSector = sectorMapper.toEntity(data);
+
+        if (data.categoriesId() != null) {
+            List<Category> categories = categoryRepository.findAllById(data.categoriesId());
+            if (categories.size() != data.categoriesId().size()) throw new ResourceNotFoundException("Uma ou mais categorias não foram encontradas");
+            categories.forEach(category -> category.setSector(newSector));
+            newSector.setCategories(new java.util.ArrayList<>(categories));
+        }
+        if (data.techsId() != null) {
+            List<User> techs = userRepository.findAllById(data.techsId());
+            if (techs.size() != data.techsId().size() || techs.stream().anyMatch(tech -> tech.getType() != br.ifrn.edu.sici.enums.UserType.TECNICO)) {
+                throw new ResourceNotFoundException("Um ou mais técnicos não foram encontrados");
+            }
+            techs.forEach(tech -> tech.setSector(newSector));
+            newSector.setTechs(new java.util.ArrayList<>(techs));
+        }
 
         newSector = sectorRepository.save(newSector);
 
@@ -102,20 +119,35 @@ public class SectorService {
         // 3. Atualiza as Categorias (@OneToMany)
         if (data.categoriesId() != null) {
             // Busca as categorias no banco pelos IDs recebidos
-            List<Category> categories = categoryService.findAll(data.categoriesId());
+            List<Category> categories = categoryRepository.findAllById(data.categoriesId());
+            if (categories.size() != data.categoriesId().size()){
+                throw new ResourceNotFoundException("Uma ou mais categorias não foram encontradas");
+            }
+
+            if (sector.getCategories() != null) {
+                sector.getCategories().stream().filter(
+                        category -> !categories.contains(category))
+                        .forEach(category -> category.setSector(null));
+            }
 
             Sector finalSector = sector;
             categories.forEach(category -> category.setSector(finalSector));
 
-            sector.getCategories().clear();
-            sector.getCategories().addAll(categories);
+            sector.setCategories(new java.util.ArrayList<>(categories));
         }
 
         if (data.techsId() != null) {
-            List<User> techs = userService.findAllTechs(data.techsId());
+            List<User> techs = userRepository.findAllById(data.techsId());
+            if (techs.size() != data.techsId().size() || techs.stream().anyMatch(
+                    tech -> tech.getType() != br.ifrn.edu.sici.enums.UserType.TECNICO)
+            ) {
+                throw new ResourceNotFoundException("Um ou mais técnicos não foram encontrados");
+            }
 
-            sector.getTechs().clear();
-            sector.getTechs().addAll(techs);
+            if (sector.getTechs() != null) {
+                sector.getTechs().stream().filter(tech -> !techs.contains(tech)).forEach(tech -> tech.setSector(null));
+            }
+            sector.setTechs(new java.util.ArrayList<>(techs));
 
             Sector finalSector1 = sector;
             techs.forEach(t -> t.setSector(finalSector1));
@@ -131,7 +163,7 @@ public class SectorService {
             throw new ResourceNotFoundException("Setor não encontrado");
         }
 
-        if (ticketService.verify(sectorId)) {
+        if (ticketRepository.existsByCategorySectorSectorId(sectorId)) {
             throw new DatabaseException("Não é possível excluir o setor, pois existem chamados vinculados às suas categorias.");
         }
 
@@ -140,6 +172,12 @@ public class SectorService {
         } catch (DataIntegrityViolationException e) {
             throw new DatabaseException("Violação de integridade: não foi possível excluir o setor.");
         }
+    }
+
+    @Transactional
+    public List<Category> categories(Long sectorId) {
+        Sector sector = findId(sectorId);
+        return sector.getCategories();
     }
 }
 
