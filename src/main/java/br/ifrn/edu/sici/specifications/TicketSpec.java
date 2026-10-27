@@ -9,7 +9,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 
-import static javax.management.Query.or;
 
 public class TicketSpec {
 
@@ -36,7 +35,7 @@ public class TicketSpec {
             if (ObjectUtils.isEmpty(sectorId)) {
                 return null;
             }
-            return builder.equal(root.get("sectorId"), sectorId);
+            return builder.equal(root.join("category").join("sector").get("sectorId"), sectorId);
         };
     }
 
@@ -46,7 +45,7 @@ public class TicketSpec {
             if (ObjectUtils.isEmpty(categoryId)) {
                 return null;
             }
-            return builder.equal(root.get("categoryId"), categoryId);
+            return builder.equal(root.get("category").get("categoryId"), categoryId);
         };
     }
 
@@ -55,7 +54,7 @@ public class TicketSpec {
             if (ObjectUtils.isEmpty(requestId)) {
                 return null;
             }
-            return builder.equal(root.get("requestId"), requestId);
+            return builder.equal(root.get("request").get("userId"), requestId);
         };
     }
 
@@ -64,18 +63,15 @@ public class TicketSpec {
             if (ObjectUtils.isEmpty(techId)) {
                 return null;
             }
-            return builder.equal(root.get("techId"), techId);
+            return builder.equal(root.get("tech").get("userId"), techId);
         };
     }
 
     public static Specification<Ticket> openDateBetween(LocalDateTime start, LocalDateTime end) {
         return (root, query, builder) -> {
-            if (ObjectUtils.isEmpty(start)){
-                return null;
-            }
-            if(ObjectUtils.isEmpty(end)){
-                return null;
-            }
+            if (start == null && end == null) return null;
+            if (start == null) return builder.lessThanOrEqualTo(root.get("openDate"), end);
+            if (end == null) return builder.greaterThanOrEqualTo(root.get("openDate"), start);
             return builder.between(root.get("openDate"), start, end);
         };
     }

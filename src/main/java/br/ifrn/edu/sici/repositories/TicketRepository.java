@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import br.ifrn.edu.sici.models.Ticket;
+import br.ifrn.edu.sici.enums.Status;
 
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public interface TicketRepository extends
     Optional<Ticket> findByTicketId(Long ticketId);
 
     @Query("SELECT t.status FROM Ticket t WHERE t.ticketId = :ticketId")
-    Optional<Ticket> findStatusById(Long ticketId);
+    Optional<Status> findStatusById(Long ticketId);
 
     boolean existsByCategorySectorSectorId(Long sectorId);
 }

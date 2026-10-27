@@ -13,7 +13,7 @@ public class UserSpec {
             if (ObjectUtils.isEmpty(name)){
                 return null;
             }
-            return builder.equal(root.get("name"), name);
+            return builder.like(builder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
         };
     }
 
@@ -31,7 +31,7 @@ public class UserSpec {
             if(ObjectUtils.isEmpty(sectorId)){
                 return null;
             }
-            return builder.equal(root.get("sectorId"), sectorId);
+            return builder.equal(root.join("sector").get("sectorId"), sectorId);
         };
     }
 }
