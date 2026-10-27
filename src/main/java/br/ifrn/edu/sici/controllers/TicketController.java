@@ -92,6 +92,4 @@ public class TicketController {
         return ResponseEntity.ok(responseDTO);
     }
 
-    // falta o de listar com filtros
-
 }

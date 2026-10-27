@@ -2,6 +2,7 @@ package br.ifrn.edu.sici.services;
 
 import br.ifrn.edu.sici.dtos.requests.SectorRequestDTO;
 import br.ifrn.edu.sici.dtos.responses.SectorResponseDTO;
+import br.ifrn.edu.sici.enums.UserType;
 import br.ifrn.edu.sici.mappers.SectorMapper;
 import br.ifrn.edu.sici.models.Category;
 import br.ifrn.edu.sici.models.Sector;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,10 +49,11 @@ public class SectorService {
         this.categoryRepository = categoryRepository;
     }
 
-    public SectorResponseDTO create(SectorRequestDTO data, Long adminId){
-        User admin = userRepository.findById(adminId).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+    public SectorResponseDTO create(SectorRequestDTO data){
+        User admin = userRepository.findById(data.adminId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if (admin.getType() != br.ifrn.edu.sici.enums.UserType.ADMINISTRADOR){
+        if (admin.getType() != UserType.ADMINISTRADOR){
             throw new RuleConflit("Apenas usuário do tipo administrador pode cadastrar um setor");
         }
 
@@ -64,13 +67,17 @@ public class SectorService {
 
         if (data.categoriesId() != null) {
             List<Category> categories = categoryRepository.findAllById(data.categoriesId());
-            if (categories.size() != data.categoriesId().size()) throw new ResourceNotFoundException("Uma ou mais categorias não foram encontradas");
+            if (categories.size() != data.categoriesId().size()){
+                throw new ResourceNotFoundException("Uma ou mais categorias não foram encontradas");
+            }
+
             categories.forEach(category -> category.setSector(newSector));
-            newSector.setCategories(new java.util.ArrayList<>(categories));
+            newSector.setCategories(new ArrayList<>(categories));
         }
         if (data.techsId() != null) {
             List<User> techs = userRepository.findAllById(data.techsId());
-            if (techs.size() != data.techsId().size() || techs.stream().anyMatch(tech -> tech.getType() != br.ifrn.edu.sici.enums.UserType.TECNICO)) {
+            if (techs.size() != data.techsId().size() || techs.stream()
+                    .anyMatch(tech -> tech.getType() != UserType.TECNICO)) {
                 throw new ResourceNotFoundException("Um ou mais técnicos não foram encontrados");
             }
             techs.forEach(tech -> tech.setSector(newSector));
