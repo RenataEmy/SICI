@@ -64,6 +64,7 @@ public class SectorService {
         }
 
         Sector newSector = sectorMapper.toEntity(data);
+        Sector sectorToCreate = newSector;
 
         if (data.categoriesId() != null) {
             List<Category> categories = categoryRepository.findAllById(data.categoriesId());
@@ -71,7 +72,7 @@ public class SectorService {
                 throw new ResourceNotFoundException("Uma ou mais categorias não foram encontradas");
             }
 
-            categories.forEach(category -> category.setSector(newSector));
+            categories.forEach(category -> category.setSector(sectorToCreate));
             newSector.setCategories(new ArrayList<>(categories));
         }
         if (data.techsId() != null) {
@@ -80,7 +81,7 @@ public class SectorService {
                     .anyMatch(tech -> tech.getType() != UserType.TECNICO)) {
                 throw new ResourceNotFoundException("Um ou mais técnicos não foram encontrados");
             }
-            techs.forEach(tech -> tech.setSector(newSector));
+            techs.forEach(tech -> tech.setSector(sectorToCreate));
             newSector.setTechs(new java.util.ArrayList<>(techs));
         }
 

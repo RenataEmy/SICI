@@ -56,7 +56,7 @@ public class UserService {
             List<Ticket> tickets = ticketRepository.findAllById(data.ticketsId());
             if (tickets.size() != data.ticketsId().size()) throw new ResourceNotFoundException("Um ou mais chamados não foram encontrados");
             newUser.setTickets(new java.util.ArrayList<>(tickets));
-            tickets.forEach(ticket -> ticket.setTech(newUser));
+            for (Ticket ticket : tickets) ticket.setTech(newUser);
         }
 
         newUser = userRepository.save(newUser);
@@ -128,7 +128,7 @@ public class UserService {
             if (user.getTickets() != null) {
                 user.getTickets().stream().filter(ticket -> !tickets.contains(ticket)).forEach(ticket -> ticket.setTech(null));
             }
-            tickets.forEach(ticket -> ticket.setTech(user));
+            for (Ticket ticket : tickets) ticket.setTech(user);
 
             user.setTickets(new java.util.ArrayList<>(tickets));
         }
