@@ -115,9 +115,17 @@ public class SectorService {
 
     @Transactional
     public SectorResponseDTO change(Long id, SectorRequestDTO data) {
-        // 1. Busca o setor existente
-        Sector sector = sectorRepository .findById(id)
+        Sector sector = sectorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Setor não encontrado"));
+
+        User admin = userRepository.findById(data.adminId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário administrador não encontrado"));
+        if (admin.getType() != UserType.ADMINISTRADOR) {
+            throw new RuleConflit("Apenas usuário do tipo administrador pode alterar um setor");
+        }
+        if (sectorRepository.existsByAcronymAndSectorIdNot(data.acronym(), id)) {
+            throw new RuleConflit("Já existe outro setor cadastrado com essa sigla");
+        }
 
         // 2. Atualiza os dados básicos
         sector.setName(data.name());

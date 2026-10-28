@@ -65,7 +65,7 @@ public class SectorController {
     @PutMapping("/{id}")
     public ResponseEntity<SectorResponseDTO> change(
             @PathVariable Long id,
-            @RequestBody SectorRequestDTO data
+            @RequestBody @Valid SectorRequestDTO data
     ){
         SectorResponseDTO response = sectorService.change(id, data);
         return ResponseEntity.ok(response);

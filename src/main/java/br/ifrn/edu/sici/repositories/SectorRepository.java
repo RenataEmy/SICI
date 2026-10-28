@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface SectorRepository extends JpaRepository<Sector, Long>, JpaSpecificationExecutor<Sector>{
 
     Optional<Sector> findByAcronym(String acronym);
+    boolean existsByAcronymAndSectorIdNot(String acronym, Long sectorId);
 
 }

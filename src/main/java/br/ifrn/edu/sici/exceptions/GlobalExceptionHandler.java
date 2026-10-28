@@ -1,40 +1,54 @@
 package br.ifrn.edu.sici.exceptions;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.MethodArgumentTypeMismatchException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.Map;
+import java.time.Instant;
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, String>> notFound(ResourceNotFoundException exception) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", exception.getMessage()));
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class,
+            HttpMessageNotReadableException.class, MissingServletRequestParameterException.class,
+            MethodArgumentTypeMismatchException.class, BindException.class})
+    public ResponseEntity<ApiError> badRequest(Exception exception, HttpServletRequest request) {
+        String message = exception instanceof MethodArgumentNotValidException invalid
+                ? invalid.getBindingResult().getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage()).filter(Objects::nonNull).findFirst().orElse("Dados inválidos")
+                : exception.getMessage();
+        return response(HttpStatus.BAD_REQUEST, message, request);
     }
 
-    @ExceptionHandler(TypeUserDenied.class)
-    public ResponseEntity<Map<String, String>> forbidden(TypeUserDenied exception) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", exception.getMessage()));
+    @ExceptionHandler({ResourceNotFoundException.class, EntityNotFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ApiError> notFound(Exception exception, HttpServletRequest request) {
+        return response(HttpStatus.NOT_FOUND, exception.getMessage(), request);
     }
 
-    @ExceptionHandler({RuleConflit.class, DatabaseException.class})
-    public ResponseEntity<Map<String, String>> conflict(RuntimeException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", exception.getMessage()));
+    @ExceptionHandler({RuleConflit.class, TypeUserDenied.class, DatabaseException.class, DataIntegrityViolationException.class})
+    public ResponseEntity<ApiError> conflict(Exception exception, HttpServletRequest request) {
+        String message = exception instanceof DataIntegrityViolationException
+                ? "Violação de regra de integridade ou duplicidade de dados" : exception.getMessage();
+        return response(HttpStatus.CONFLICT, message, request);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> invalidBody(MethodArgumentNotValidException exception) {
-        String message = exception.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getDefaultMessage()).findFirst().orElse("Dados inválidos");
-        return ResponseEntity.badRequest().body(Map.of("message", message));
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> unexpected(Exception exception, HttpServletRequest request) {
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno ao processar a requisição", request);
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Map<String, String>> invalidParameter(ConstraintViolationException exception) {
-        return ResponseEntity.badRequest().body(Map.of("message", exception.getMessage()));
+    private ResponseEntity<ApiError> response(HttpStatus status, String message, HttpServletRequest request) {
+        return ResponseEntity.status(status).body(new ApiError(Instant.now(), status.value(), message, request.getRequestURI()));
     }
 }

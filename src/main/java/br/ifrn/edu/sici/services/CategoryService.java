@@ -68,6 +68,11 @@ public class CategoryService {
     @Transactional
     public CategoryResponseDTO change(Long id, CategoryRequestDTO data) {
         Category category = findById(id);
+        User admin = userRepository.findById(data.adminId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário administrador não encontrado"));
+        if (admin.getType() != UserType.ADMINISTRADOR) {
+            throw new RuleConflit("Apenas usuário administrador pode alterar categorias");
+        }
         category.setName(data.name());
         category.setDescription(data.description());
         category.setSector(sectorService.findId(data.sectorId()));
