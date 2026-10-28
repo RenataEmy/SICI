@@ -5,6 +5,9 @@ import br.ifrn.edu.sici.dtos.responses.UserResponseDTO;
 import br.ifrn.edu.sici.enums.UserType;
 import br.ifrn.edu.sici.filters.UserFilter;
 import br.ifrn.edu.sici.mappers.UserMapper;
+import br.ifrn.edu.sici.mappers.TicketMapper;
+import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
+import br.ifrn.edu.sici.enums.Status;
 import br.ifrn.edu.sici.models.Sector;
 import br.ifrn.edu.sici.models.Ticket;
 import br.ifrn.edu.sici.repositories.TicketRepository;
@@ -25,14 +28,16 @@ public class UserService {
     private final UserMapper userMapper;
     private final SectorService sectorService;
     private final TicketRepository ticketRepository;
+    private final TicketMapper ticketMapper;
 
     public UserService(UserRepository userRepository,
                        UserMapper userMapper,
-                       SectorService sectorService, TicketRepository ticketRepository){
+                       SectorService sectorService, TicketRepository ticketRepository, TicketMapper ticketMapper){
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.sectorService = sectorService;
         this.ticketRepository = ticketRepository;
+        this.ticketMapper = ticketMapper;
     }
 
     @Transactional
@@ -132,6 +137,8 @@ public class UserService {
         return userMapper.toResponse(user);
     }
 
-
-    public
+    public Page<TicketResponseDTO> tickets(Long userId, Status status, Pageable pageable) {
+        findById(userId);
+        return ticketRepository.findByUserAndStatus(userId, status, pageable).map(ticketMapper::toResponseDTO);
+    }
 }

@@ -27,4 +27,7 @@ public interface TicketRepository extends
     Optional<Status> findStatusById(Long ticketId);
 
     boolean existsByCategorySectorSectorId(Long sectorId);
+
+    @Query("select t from Ticket t where (t.request.userId = :userId or t.tech.userId = :userId) and (:status is null or t.status = :status)")
+    Page<Ticket> findByUserAndStatus(Long userId, Status status, Pageable pageable);
 }

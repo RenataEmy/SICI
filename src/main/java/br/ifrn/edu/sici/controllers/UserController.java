@@ -3,6 +3,8 @@ package br.ifrn.edu.sici.controllers;
 import br.ifrn.edu.sici.dtos.requests.UserRequestDTO;
 import br.ifrn.edu.sici.dtos.responses.UserResponseDTO;
 import br.ifrn.edu.sici.filters.UserFilter;
+import br.ifrn.edu.sici.enums.Status;
+import br.ifrn.edu.sici.dtos.responses.TicketResponseDTO;
 import br.ifrn.edu.sici.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -43,6 +45,14 @@ public class UserController {
         UserResponseDTO responseDTO = userService.get(id);
 
         return ResponseEntity.ok(responseDTO);
+    }
+
+    @GetMapping("/{id}/chamados")
+    public ResponseEntity<Page<TicketResponseDTO>> tickets(
+            @PathVariable Long id,
+            @RequestParam(required = false) Status status,
+            Pageable pageable) {
+        return ResponseEntity.ok(userService.tickets(id, status, pageable));
     }
 
     @GetMapping
