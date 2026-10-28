@@ -114,7 +114,7 @@ public class SectorService {
     }
 
     @Transactional
-    public SectorResponseDTO change(Long id, Long adminId, SectorRequestDTO data) {
+    public SectorResponseDTO change(Long id, SectorRequestDTO data) {
         // 1. Busca o setor existente
         Sector sector = sectorRepository .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Setor não encontrado"));

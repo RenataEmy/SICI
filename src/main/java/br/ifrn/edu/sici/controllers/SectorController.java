@@ -62,4 +62,21 @@ public class SectorController {
         return ResponseEntity.ok(sectorService.categories(id).stream().map(categoryMapper::toResponse).toList());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<SectorResponseDTO> change(
+            @PathVariable Long id,
+            @RequestBody SectorRequestDTO data
+    ){
+        SectorResponseDTO response = sectorService.change(id, data);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id
+    ){
+        sectorService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
