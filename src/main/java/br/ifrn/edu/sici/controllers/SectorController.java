@@ -50,7 +50,7 @@ public class SectorController {
 
     @GetMapping
     public ResponseEntity<Page<SectorResponseDTO>> list(
-            @RequestBody String name,
+            @RequestParam(required = false) String name,
             Pageable pageable
     ){
         Page<SectorResponseDTO> page = sectorService.listAll(name, pageable);
@@ -58,8 +58,8 @@ public class SectorController {
     }
 
     @GetMapping("/{id}/categorias")
-    public ResponseEntity<List<CategoryResponseDTO>> categories(@PathVariable Long id) {
-        return ResponseEntity.ok(sectorService.categories(id).stream().map(categoryMapper::toResponse).toList());
+    public ResponseEntity<Page<CategoryResponseDTO>> categories(@PathVariable Long id, Pageable pageable) {
+        return ResponseEntity.ok(sectorService.categories(id, pageable).map(categoryMapper::toResponse));
     }
 
     @PutMapping("/{id}")

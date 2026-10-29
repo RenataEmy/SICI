@@ -40,7 +40,7 @@ public class TicketController {
 
     @GetMapping
     public ResponseEntity<Page<TicketResponseDTO>> list(
-            TicketFilter filter,
+            @ModelAttribute TicketFilter filter,
             Pageable pageable) {
 
         Page<TicketResponseDTO> page = ticketService.listAll(filter, pageable);

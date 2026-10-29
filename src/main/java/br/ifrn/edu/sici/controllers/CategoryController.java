@@ -32,7 +32,7 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<Page<CategoryResponseDTO>> list(
-            CategoryFilter filter,
+            @ModelAttribute CategoryFilter filter,
             Pageable pageable) {
         return ResponseEntity.ok(categoryService.list(filter, pageable));
     }

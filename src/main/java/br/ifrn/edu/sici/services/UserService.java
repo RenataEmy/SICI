@@ -21,6 +21,7 @@ import br.ifrn.edu.sici.exceptions.RuleConflit;
 
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Locale;
 
 @Service 
 public class UserService {
@@ -42,36 +43,32 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO create(UserRequestDTO data){
-        try {
-            boolean isEmail = userRepository.existsByEmail(data.email());
+        boolean isEmail = userRepository.existsByEmail(data.email());
 
-            if (isEmail) {
-                throw new RuleConflit("Já existe usuário com esse e-mail cadastrado");
-            }
-
-            boolean isRegistration = userRepository.existsByRegistration(data.registration());
-
-            if (isRegistration) {
-                throw new RuleConflit("Já existe usuário com essa matrícula cadastrada");
-            }
-
-            String userTypeInput = data.type() != null ? data.type().toUpperCase() : "";
-
-            if (!List.of(UserType.TECNICO, UserType.ADMINISTRADOR, UserType.SOLICITANTE).contains(userTypeInput)) {
-                throw new RuleConflit("O tipo do usuário deve ser 'TECNICO', 'ADMINISTRADOR' ou 'SOLICITANTE'");
-            }
-
-            User newUser = userMapper.toEntity(data);
-
-            if (data.sectorId() != null) newUser.setSector(sectorService.findId(data.sectorId()));
-
-            User savedUser = userRepository.save(newUser);
-
-            return userMapper.toResponse(savedUser);
-        } catch (Exception e){
-            e.printStackTrace();
-            throw e;
+        if (isEmail) {
+            throw new RuleConflit("Já existe usuário com esse e-mail cadastrado");
         }
+
+        boolean isRegistration = userRepository.existsByRegistration(data.registration());
+
+        if (isRegistration) {
+            throw new RuleConflit("Já existe usuário com essa matrícula cadastrada");
+        }
+
+        UserType userType;
+        try {
+            userType = UserType.valueOf(data.type().trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new RuleConflit("O tipo do usuário deve ser 'TECNICO', 'ADMINISTRADOR' ou 'SOLICITANTE'");
+        }
+
+        User newUser = userMapper.toEntity(data);
+        newUser.setType(userType);
+
+        if (data.sectorId() != null) newUser.setSector(sectorService.findId(data.sectorId()));
+
+        User savedUser = userRepository.save(newUser);
+        return userMapper.toResponse(savedUser);
 
     }
 
@@ -95,13 +92,17 @@ public class UserService {
     }
 
     public Page<UserResponseDTO> findWithFilters(UserFilter userFilter, Pageable pageable){
-        Page<User> usersPage = userRepository.findAll(userFilter.toSpecification(), pageable);
-        if(usersPage.isEmpty()){
-            throw new ResourceNotFoundException("Nenhum usuário localizado");
+        try{
+            Page<User> usersPage = userRepository.findAll(userFilter.toSpecification(), pageable);
+            if(usersPage.isEmpty()){
+                throw new ResourceNotFoundException("Nenhum usuário localizado");
+            }
+
+            return usersPage.map(userMapper::toResponse);
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
         }
-
-        return usersPage.map(userMapper::toResponse);
-
     }
 
     @Transactional

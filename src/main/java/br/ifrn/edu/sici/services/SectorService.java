@@ -191,9 +191,9 @@ public class SectorService {
     }
 
     @Transactional
-    public List<Category> categories(Long sectorId) {
-        Sector sector = findId(sectorId);
-        return sector.getCategories();
+    public Page<Category> categories(Long sectorId, Pageable pageable) {
+        findId(sectorId);
+        return categoryRepository.findBySectorSectorId(sectorId, pageable);
     }
 }
 

@@ -57,7 +57,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<Page<UserResponseDTO>> findWithFilters(
-            UserFilter userFilter,
+            @ModelAttribute UserFilter userFilter,
             Pageable pageable) {
 
         Page<UserResponseDTO> usersPage = userService.findWithFilters(userFilter, pageable);
