@@ -15,6 +15,7 @@ import java.util.List;
 public interface UserMapper {
     @Mapping(target = "sector", ignore = true)
     @Mapping(target = "tickets", ignore = true)
+    @Mapping(target = "type", expression = "java(data.type() != null ? br.ifrn.edu.sici.enums.UserType.valueOf(data.type().toUpperCase()) : null)")
     User toEntity(UserRequestDTO data);
 
     @Mapping(source = "sector.sectorId", target = "sectorId")

@@ -12,7 +12,7 @@ public record UserRequestDTO(
         @NotBlank(message = "O e-mail é obrigatório") @Email(message = "E-mail inválido") @Size(max = 100) String email,
         @Positive(message = "A matrícula deve ser positiva") int registration,
         @NotBlank(message = "O tipo de usuário é obrigatório") String type,
-        List<Long> ticketsId,
+        //List<Long> ticketsId,
         Long sectorId
 ) {
 }

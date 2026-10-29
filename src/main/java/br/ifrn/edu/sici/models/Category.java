@@ -4,6 +4,8 @@ import java.util.List;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity 
 @Table(name = "tb_category")
@@ -22,6 +24,7 @@ public class Category {
 
     @ManyToOne 
     @JoinColumn(name = "sectorId")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Sector sector;
 
     @OneToMany(mappedBy = "category")
