@@ -30,11 +30,11 @@
     {
       "name": "Usuários",
       "item": [
-        {"name":"Criar usuário","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana@example.org\",\n  \"registration\": 1234,\n  \"type\": \"SOLICITANTE\",\n  \"ticketsId\": [],\n  \"sectorId\": null\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/usuarios","host":["{{base_url}}"],"path":["usuarios"]}}},
+        {"name":"Criar usuário","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana@example.org\",\n  \"registration\": 1234,\n  \"type\": \"SOLICITANTE\",\n  \"sectorId\": null\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/usuarios","host":["{{base_url}}"],"path":["usuarios"]}}},
         {"name":"Listar usuários (filtros e paginação)","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/usuarios?name=ana&type=SOLICITANTE&page=0&size=20","host":["{{base_url}}"],"path":["usuarios"],"query":[{"key":"name","value":"ana"},{"key":"type","value":"SOLICITANTE"},{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
         {"name":"Buscar usuário por ID","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/usuarios/10","host":["{{base_url}}"],"path":["usuarios","10"]}}},
         {"name":"Listar chamados do usuário (filtro de status)","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/usuarios/10/chamados?status=ABERTO&page=0&size=20","host":["{{base_url}}"],"path":["usuarios","10","chamados"],"query":[{"key":"status","value":"ABERTO"},{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
-        {"name":"Atualizar usuário","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana@example.org\",\n  \"registration\": 1234,\n  \"type\": \"SOLICITANTE\",\n  \"ticketsId\": [],\n  \"sectorId\": null\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/usuarios/10","host":["{{base_url}}"],"path":["usuarios","10"]}}}
+        {"name":"Atualizar usuário","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana@example.org\",\n  \"registration\": 1234,\n  \"type\": \"SOLICITANTE\",\n  \"sectorId\": null\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/usuarios/10","host":["{{base_url}}"],"path":["usuarios","10"]}}}
       ]
     },
     {
