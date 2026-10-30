@@ -11,7 +11,7 @@ services:
     volumes:
       - sici-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sici -d sici"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d sicidatabase"]
       interval: 5s
       timeout: 3s
       retries: 15
@@ -22,9 +22,9 @@ services:
       dockerfile: DockerFile
     container_name: sici-api
     environment:
-      DB_URL: ${DB_URL}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
+      DB_URL: ${DB_URL:-jdbc:postgresql://db:5432/sicidatabase}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASS: ${DB_PASS:-admin}
     ports:
       - "8080:8080"
     depends_on:
