@@ -1,11 +1,13 @@
 package br.ifrn.edu.sici.models;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import br.ifrn.edu.sici.enums.Priority;
 import br.ifrn.edu.sici.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
+import br.ifrn.edu.sici.models.Interaction;
 
 @Entity 
 @Table(name = "tb_ticket")
@@ -39,20 +41,23 @@ public class Ticket {
     @Column(nullable = true)
     private LocalDateTime closeDate;
 
-    @Column(nullable = false, length = 300)
+    @Column(nullable = true, length = 300)
     private String solution;
 
     @ManyToOne
-    @JoinColumn(name = "request_id")
+    @JoinColumn(name = "requestId")
     private User request;
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "categoryId")
     private Category category;
 
     @ManyToOne
-    @JoinColumn(name = "tech_id", nullable = true)
+    @JoinColumn(name = "techId", nullable = true)
     private User tech;
+
+    @OneToMany(mappedBy = "ticket")
+    private List<Interaction> interactions;
 
 
 }

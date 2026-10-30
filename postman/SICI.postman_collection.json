@@ -1,0 +1,53 @@
+{
+  "info": {
+    "_postman_id": "a5702e9e-7127-4e49-9344-6d31d9110047",
+    "name": "SICI API",
+    "description": "Exemplos para todos os endpoints da API SICI. IDs de quem executa ações são enviados no body JSON conforme o contrato da API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Categorias",
+      "item": [
+        {"name":"Criar categoria","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Equipamentos\",\n  \"description\": \"Projetores e computadores\",\n  \"sectorId\": 1,\n  \"adminId\": 2\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/categorias","host":["{{base_url}}"],"path":["categorias"]}}},
+        {"name":"Listar categorias (filtros e paginação)","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/categorias?name=equip&sectorId=1&page=0&size=20","host":["{{base_url}}"],"path":["categorias"],"query":[{"key":"name","value":"equip"},{"key":"sectorId","value":"1"},{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
+        {"name":"Buscar categoria por ID","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/categorias/1","host":["{{base_url}}"],"path":["categorias","1"]}}},
+        {"name":"Atualizar categoria","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Equipamentos\",\n  \"description\": \"Equipamentos audiovisuais\",\n  \"sectorId\": 1,\n  \"adminId\": 2\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/categorias/1","host":["{{base_url}}"],"path":["categorias","1"]}}},
+        {"name":"Excluir categoria","request":{"method":"DELETE","header":[],"url":{"raw":"{{base_url}}/categorias/1","host":["{{base_url}}"],"path":["categorias","1"]}}}
+      ]
+    },
+    {
+      "name": "Setores",
+      "item": [
+        {"name":"Criar setor","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Tecnologia da Informação\",\n  \"acronym\": \"TI\",\n  \"categoriesId\": [],\n  \"techsId\": [],\n  \"adminId\": 2\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/setores","host":["{{base_url}}"],"path":["setores"]}}},
+        {"name":"Listar setores (contrato atual: body texto)","request":{"method":"GET","header":[{"key":"Content-Type","value":"text/plain"}],"body":{"mode":"raw","raw":"Tecnologia"},"url":{"raw":"{{base_url}}/setores?page=0&size=20","host":["{{base_url}}"],"path":["setores"],"query":[{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
+        {"name":"Buscar setor por ID","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/setores/1","host":["{{base_url}}"],"path":["setores","1"]}}},
+        {"name":"Listar categorias do setor","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/setores/1/categorias","host":["{{base_url}}"],"path":["setores","1","categorias"]}}},
+        {"name":"Atualizar setor","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Tecnologia\",\n  \"acronym\": \"TI\",\n  \"categoriesId\": [1],\n  \"techsId\": [12],\n  \"adminId\": 2\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/setores/1","host":["{{base_url}}"],"path":["setores","1"]}}},
+        {"name":"Excluir setor","request":{"method":"DELETE","header":[],"url":{"raw":"{{base_url}}/setores/1","host":["{{base_url}}"],"path":["setores","1"]}}}
+      ]
+    },
+    {
+      "name": "Usuários",
+      "item": [
+        {"name":"Criar usuário","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana@example.org\",\n  \"registration\": 1234,\n  \"type\": \"SOLICITANTE\",\n  \"sectorId\": null\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/usuarios","host":["{{base_url}}"],"path":["usuarios"]}}},
+        {"name":"Listar usuários (filtros e paginação)","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/usuarios?name=ana&type=SOLICITANTE&page=0&size=20","host":["{{base_url}}"],"path":["usuarios"],"query":[{"key":"name","value":"ana"},{"key":"type","value":"SOLICITANTE"},{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
+        {"name":"Buscar usuário por ID","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/usuarios/10","host":["{{base_url}}"],"path":["usuarios","10"]}}},
+        {"name":"Listar chamados do usuário (filtro de status)","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/usuarios/10/chamados?status=ABERTO&page=0&size=20","host":["{{base_url}}"],"path":["usuarios","10","chamados"],"query":[{"key":"status","value":"ABERTO"},{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
+        {"name":"Atualizar usuário","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana@example.org\",\n  \"registration\": 1234,\n  \"type\": \"SOLICITANTE\",\n  \"sectorId\": null\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/usuarios/10","host":["{{base_url}}"],"path":["usuarios","10"]}}}
+      ]
+    },
+    {
+      "name": "Chamados",
+      "item": [
+        {"name":"Criar chamado","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"title\": \"Projetor sem imagem\",\n  \"description\": \"O projetor não liga\",\n  \"location\": \"Sala 12\",\n  \"priority\": \"MEDIA\",\n  \"categoryId\": 1,\n  \"requestId\": 10\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/chamados","host":["{{base_url}}"],"path":["chamados"]}}},
+        {"name":"Listar chamados (filtros e paginação)","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/chamados?status=ABERTO&priority=ALTA&sectorId=1&page=0&size=20","host":["{{base_url}}"],"path":["chamados"],"query":[{"key":"status","value":"ABERTO"},{"key":"priority","value":"ALTA"},{"key":"sectorId","value":"1"},{"key":"page","value":"0"},{"key":"size","value":"20"}]}}},
+        {"name":"Buscar chamado por ID","request":{"method":"GET","header":[],"url":{"raw":"{{base_url}}/chamados/31","host":["{{base_url}}"],"path":["chamados","31"]}}},
+        {"name":"Assumir chamado (body é techId numérico)","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"12","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/chamados/31/assumir","host":["{{base_url}}"],"path":["chamados","31","assumir"]}}},
+        {"name":"Resolver chamado","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"techId\": 12,\n  \"solution\": \"Cabo HDMI substituído\"\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/chamados/31/resolver","host":["{{base_url}}"],"path":["chamados","31","resolver"]}}},
+        {"name":"Cancelar chamado (body é requestId numérico)","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"10","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/chamados/31/cancelar","host":["{{base_url}}"],"path":["chamados","31","cancelar"]}}},
+        {"name":"Adicionar interação","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"text\": \"O equipamento está disponível para atendimento\",\n  \"userId\": 10\n}","options":{"raw":{"language":"json"}}},"url":{"raw":"{{base_url}}/chamados/31/interacoes","host":["{{base_url}}"],"path":["chamados","31","interacoes"]}}}
+      ]
+    }
+  ]
+}

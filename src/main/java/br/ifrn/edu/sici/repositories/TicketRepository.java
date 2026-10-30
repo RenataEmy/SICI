@@ -1,14 +1,33 @@
 package br.ifrn.edu.sici.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import br.ifrn.edu.sici.models.Ticket;
+import br.ifrn.edu.sici.enums.Status;
+
+import java.util.Optional;
 
 @Repository
-public interface TicketRepository extends JpaRepository<Ticket, Long> {
+public interface TicketRepository extends
+        JpaRepository<Ticket, Long>,
+        JpaSpecificationExecutor<Ticket>
+{
 
-    Ticket findByName(String name);
+    @EntityGraph(attributePaths = {"interactions"})
+    Optional<Ticket> findByTicketId(Long ticketId);
 
-    
+    @Query("SELECT t.status FROM Ticket t WHERE t.ticketId = :ticketId")
+    Optional<Status> findStatusById(Long ticketId);
+
+    boolean existsByCategorySectorSectorId(Long sectorId);
+
+    @Query("select t from Ticket t where (t.request.userId = :userId or t.tech.userId = :userId) and (:status is null or t.status = :status)")
+    Page<Ticket> findByUserAndStatus(Long userId, Status status, Pageable pageable);
 }

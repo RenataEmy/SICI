@@ -3,10 +3,14 @@ package br.ifrn.edu.sici.models;
 import java.util.List;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 
 @Entity
 @Table(name = "tb_sector")
+@Getter
+@Setter
 public class Sector{
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)

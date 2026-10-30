@@ -6,6 +6,8 @@ import br.ifrn.edu.sici.enums.UserType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 
 @Entity 
@@ -30,7 +32,12 @@ public class User {
     @Column(nullable = false)
     private UserType type;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "tech")
     private List<Ticket> tickets;
+
+    @ManyToOne
+    @JoinColumn(name = "sectorId")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Sector sector;
 }
 
