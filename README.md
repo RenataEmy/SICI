@@ -1,124 +1,148 @@
-# SICI — Sistema de Chamados Institucionais
+# Sistema Interno de Chamados IFRN - SICI - API REST
 
-API REST para registrar, distribuir e acompanhar chamados de suporte. O sistema organiza solicitações por categoria e setor, permite que técnicos assumam e resolvam chamados e mantém interações associadas ao atendimento.
+## 📄 O que é o projeto
+Este projeto é uma API REST desenvolvida para centralizar e gerenciar o sistema de chamados de suporte do IFRN (Instituto Federal do Rio Grande do Norte). O objetivo é substituir os pedidos informais (via WhatsApp, e-mail ou pessoalmente) por um sistema estruturado onde é possível registrar, priorizar e manter o histórico de problemas de infraestrutura e TI, como falhas em projetores ou quedas de rede.
 
-## Tecnologias
+O fluxo base permite que um **solicitante** abra um chamado, um **técnico** de um setor responsável assuma e resolva a demanda, mantendo todas as interações e o ciclo de vida do chamado devidamente registrados.
 
-- Java 21
-- Spring Boot 4.1.1, Spring Web MVC, Spring Data JPA e Bean Validation
-- PostgreSQL 16 e Flyway
-- Maven e MapStruct
-- Docker e Docker Compose
+## 🛠 Tecnologias
+O projeto foi construído utilizando as seguintes tecnologias e frameworks:
+- **Java 21**
+- **Spring Boot 4** (Spring Web, Spring Data JPA)
+- **PostgreSQL** (Banco de dados relacional)
+- **Flyway** (Versionamento de banco de dados / Migrations)
+- **MapStruct** (Mapeamento de objetos para linguagem Java)
+- **Lombok** (Redução de boilerplate de código)
+- **Docker & Docker Compose** (Containerização e orquestração)
+- **Maven** (Gerenciamento de dependências)
 
-> A versão efetivamente configurada no projeto é Java 21 / Spring Boot 4.1.1.
+### ⚙️ Sobre o uso do Flyway (Nota de Estudo)
+Neste projeto, a criação e alteração do banco de dados não são feitas pelo Hibernate. Utilizamos a propriedade `spring.jpa.hibernate.ddl-auto=validate` combinada com o **Flyway**.
+- **Como funciona:** O Flyway cria uma tabela chamada `flyway_schema_history` no banco. Ela guarda o registro de todas as migrations (arquivos SQL) que já foram aplicadas.
+- **Checksums:** Cada arquivo de migration possui um *checksum* (uma assinatura gerada a partir do seu conteúdo). Se você tentar editar uma migration que já foi aplicada, o Flyway detectará a diferença no checksum ao iniciar a aplicação e bloqueará a execução, garantindo a integridade e rastreabilidade da base de dados. Correções devem sempre ser feitas em novas versões de arquivos (ex: `V3__correcao.sql`).
+- **Por que não usar `ddl-auto=update` em produção?** Em ambientes produtivos, usar o *update* automático do Hibernate é extremamente perigoso, pois ele pode alterar colunas ou apagar estruturas de forma imprevisível, causando perda de dados. As migrations oferecem controle absoluto, explícito e seguro sobre a evolução do *schema* do banco de dados.
 
-## Execução com Docker
-
-Pré-requisitos: Docker Engine/Desktop e Docker Compose.
-
-Na raiz do repositório:
-
-```bash
-docker compose up --build
-```
-
-O Compose inicia o PostgreSQL, aguarda o banco ficar saudável e então compila e inicia a API. A API fica disponível em `http://localhost:8080`; o PostgreSQL é publicado em `localhost:5432`. As credenciais locais de desenvolvimento estão definidas no `docker-compose.yml`.
-
-Para parar os containers:
-
-```bash
-docker compose down
-```
-
-Para remover também o volume persistente do banco (apaga os dados locais):
+## 📥 Como baixar
+Para baixar o projeto em sua máquina, abra o terminal e execute o comando abaixo para clonar o repositório:
 
 ```bash
-docker compose down -v
+git clone https://github.com/RenataEmy/SICI.git
+cd SICI
 ```
 
-O build da imagem executa `mvn clean package -DskipTests`. Para executar localmente fora do Docker, configure `DB_URL`, `DB_USER` e `DB_PASS` para um PostgreSQL e rode `./mvnw spring-boot:run` (Windows: `mvnw.cmd spring-boot:run`).
+## 🚀 Como rodar local e no Docker
 
-## API e identificação de usuários
+### Rodando via Docker (Recomendado)
+A maneira mais fácil de rodar o projeto sem precisar configurar o banco de dados na sua máquina é utilizando o Docker.
+Na raiz do projeto (onde está o arquivo `docker-compose.yml`), execute:
 
-A API não usa Spring Security nem tokens. Quando uma ação precisa identificar quem a executa, o ID é enviado no JSON do corpo, em campos como `requestId`, `techId`, `userId` ou `adminId`. Operações cujo contrato atual não recebe um usuário, como exclusão de categoria, não exigem esse campo.
+```bash
+docker-compose up --build -d
+```
+A API subirá automaticamente e estará disponível em `http://localhost:8080`. O banco de dados também será inicializado, com as tabelas criadas e os dados iniciais injetados pelo Flyway.
 
-Paginação usa os parâmetros `page` e `size`. Os exemplos de status válidos são `ABERTO`, `EM_ATENDIMENTO`, `RESOLVIDO` e `CANCELADO`; prioridades: `BAIXA`, `MEDIA` e `ALTA`.
+### Rodando Localmente (Para desenvolvimento)
+1. Certifique-se de ter o **PostgreSQL** instalado e rodando.
+2. Crie um banco de dados vazio para a aplicação (ex: `chamados_db`).
+3. Configure as variáveis de ambiente ou ajuste o arquivo `application-dev.properties` com suas credenciais do banco:
+   ```properties
+   spring.datasource.url=jdbc:postgresql://localhost:5432/chamados_db
+   spring.datasource.username=seu_usuario
+   spring.datasource.password=sua_senha
+   ```
+4. Execute o projeto utilizando o Maven:
+   ```bash
+   mvn spring-boot:run
+   ```
 
-### Chamados
+## 📋 Requisitos Funcionais e Regras de Negócio
 
-| Método e rota | Finalidade | Exemplo de corpo |
-|---|---|---|
-| `POST /chamados` | Abre chamado | `{"title":"Projetor sem imagem","description":"O projetor não liga","location":"Sala 12","priority":"MEDIA","categoryId":1,"requestId":10}` |
-| `GET /chamados` | Lista com filtros/paginação | Query opcional: `status=ABERTO&priority=ALTA&sectorId=1&page=0&size=20` |
-| `GET /chamados/{id}` | Detalha chamado e interações | — |
-| `PUT /chamados/{id}/assumir` | Técnico assume chamado | JSON numérico, por exemplo `12` (`techId`) |
-| `PUT /chamados/{id}/resolver` | Técnico informa solução | `{"techId":12,"solution":"Cabo HDMI substituído"}` |
-| `PUT /chamados/{id}/cancelar` | Solicitante cancela chamado aberto | JSON numérico, por exemplo `10` (`requestId`) |
-| `POST /chamados/{id}/interacoes` | Registra interação | `{"text":"O equipamento está disponível para atendimento","userId":10}` |
+### Regras Gerais
+1. Todo chamado nasce com status **ABERTO**, `dataAbertura` gerada pelo sistema e prioridade **MEDIA** (quando não informada).
+2. O ciclo de vida de um chamado é: `ABERTO` -> `EM_ATENDIMENTO` -> `RESOLVIDO`. Ou `ABERTO` -> `CANCELADO`. Outras transições são proibidas.
+3. Chamados **RESOLVIDO** ou **CANCELADO** não aceitam alterações nem novas interações.
+4. Apenas o solicitante e o técnico atribuído podem registrar interações no chamado.
+5. Não é permitido excluir um setor ou categoria que já tenha chamados vinculados.
+6. A identificação do usuário que realiza a ação deve vir no corpo da requisição (ex: `solicitanteId`, `tecnicoId`).
 
-Resposta resumida de `POST /chamados` (201):
+### Papéis e Restrições Específicas
+- **Solicitantes:** Apenas usuários do tipo `SOLICITANTE` podem abrir chamados. Somente o próprio solicitante pode cancelar seu chamado (apenas se estiver com status ABERTO).
+- **Técnicos:** Um técnico só pode assumir um chamado ABERTO se a categoria do chamado pertencer ao setor do técnico. Ao assumir, o chamado muda para `EM_ATENDIMENTO`. Somente o técnico atribuído pode resolver o chamado, informando obrigatoriamente a solução.
+- **Administradores / Cadastros Base:**
+    - Só é possível cadastrar setores e categorias se for um usuário **ADMINISTRADOR**.
+    - Só é possível cadastrar uma **categoria** se ela tiver um **setor** vinculado.
+    - É perfeitamente possível cadastrar um **setor sem categoria** vinculada inicialmente.
+    - Ao deletar um setor (que não tenha chamados), os usuários (técnicos) e categorias que pertenciam a ele ficarão com o campo de setor **nulo** (sem setor vinculado).
 
+## 🛣 Rotas Existentes
+
+Todas as rotas de listagem (`GET` que retorna coleção) são paginadas e aceitam filtros por *query string* (ex: `?page=0&size=10&sort=dataAbertura,desc`).
+
+### Cadastros Básicos
+| Entidade | Método | Rota | Descrição |
+| :--- | :--- | :--- | :--- |
+| **Setores** | `POST`, `GET`, `PUT`, `DELETE` | `/setores` | Gerencia os setores (Filtro GET: `nome`) |
+| **Categorias**| `POST`, `GET`, `PUT`, `DELETE` | `/categorias` | Gerencia as categorias (Filtros GET: `nome`, `setorId`) |
+| **Categorias**| `GET` | `/setores/{id}/categorias` | Lista as categorias de um setor específico |
+| **Usuários** | `POST`, `GET`, `PUT` | `/usuarios` | Gerencia os usuários (Filtros GET: `nome`, `tipo`, `setorId`) |
+
+### Chamados e Interações
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/chamados` | Abre um novo chamado |
+| `GET` | `/chamados` | Lista chamados paginados com múltiplos filtros |
+| `GET` | `/chamados/{id}` | Detalha um chamado e suas interações |
+| `GET` | `/usuarios/{id}/chamados` | Lista chamados de um usuário específico (Filtro: `status`) |
+| `PATCH` | `/chamados/{id}/assumir` | Um técnico assume o chamado |
+| `PATCH` | `/chamados/{id}/resolver` | Técnico resolve o chamado (exige solução) |
+| `PATCH` | `/chamados/{id}/cancelar` | Solicitante cancela o chamado |
+| `POST` | `/chamados/{id}/interacoes`| Registra uma nova interação em um chamado |
+
+## 💡 Exemplo de Rota
+
+Abaixo está um exemplo de como fazer uma requisição para a rota de **Abertura de Chamado**.
+
+**Endpoint:** `POST /chamados`
+
+**Corpo da Requisição (JSON):**
 ```json
 {
-  "ticketId": 31,
-  "title": "Projetor sem imagem",
-  "description": "O projetor não liga",
-  "location": "Sala 12",
-  "priority": "MEDIA",
-  "status": "ABERTO",
-  "requestId": 10,
-  "categoryId": 1,
-  "techId": null
+  "title": "Projetor não liga na sala 10",
+  "description": "O projetor da sala 10 não está ligando, a luz vermelha fica piscando mas não projeta imagem.",
+  "location": "Sala 10 - Bloco A",
+  "priority": "ALTA",
+  "categoryId": 2,
+  "requestId": 5
 }
 ```
 
-### Categorias
-
-| Método e rota | Finalidade | Exemplo de corpo |
-|---|---|---|
-| `POST /categorias` | Cria categoria (administrador) | `{"name":"Equipamentos","description":"Projetores e computadores","sectorId":1,"adminId":2}` |
-| `GET /categorias` | Lista com filtros/paginação | Query opcional: `name=equip&sectorId=1&page=0&size=20` |
-| `GET /categorias/{id}` | Busca categoria | — |
-| `PUT /categorias/{id}` | Atualiza categoria (administrador) | `{"name":"Equipamentos","description":"Equipamentos audiovisuais","sectorId":1,"adminId":2}` |
-| `DELETE /categorias/{id}` | Exclui categoria sem chamados vinculados | — |
-
-Resposta resumida de categoria:
-
+**Exemplo de Resposta de Sucesso (Status 201 Created):**
 ```json
-{"categoryId":1,"name":"Equipamentos","description":"Projetores e computadores","sectorId":1}
+{
+  "id": 12,
+  "title": "Projetor não liga na sala 10",
+  "description": "O projetor da sala 10 não está ligando, a luz vermelha fica piscando mas não projeta imagem.",
+  "location": "Sala 10 - Bloco A",
+  "priority": "ALTA",
+  "status": "ABERTO",
+  "openDate": "2026-10-29T10:30:00Z",
+  "category": {
+    "id": 2,
+    "name": "Equipamento Audiovisual"
+  },
+  "request": {
+    "id": 5,
+    "name": "Maria Silva"
+  }
+}
 ```
 
-### Setores
+## 📦 Como usar a Collection do Postman
 
-| Método e rota | Finalidade | Exemplo de corpo |
-|---|---|---|
-| `POST /setores` | Cria setor (administrador) | `{"name":"Tecnologia da Informação","acronym":"TI","categoriesId":[],"techsId":[],"adminId":2}` |
-| `GET /setores` | Pesquisa/pagina setores | O contrato atual lê o nome do setor como corpo de texto; paginação por `page` e `size`. |
-| `GET /setores/{id}` | Busca setor | — |
-| `GET /setores/{id}/categorias` | Lista categorias do setor | — |
-| `PUT /setores/{id}` | Atualiza setor (administrador) | `{"name":"Tecnologia","acronym":"TI","categoriesId":[1],"techsId":[12],"adminId":2}` |
-| `DELETE /setores/{id}` | Exclui setor sem chamados associados | — |
+Para facilitar os testes, foi incluída uma collection do Postman na raiz do projeto (arquivo `Chamados-IFRN-API.postman_collection.json`).
 
-Resposta resumida de setor:
-
-```json
-{"sectorId":1,"name":"Tecnologia da Informação","acronym":"TI","categoriesId":[1],"techsId":[12]}
-```
-
-### Usuários
-
-| Método e rota | Finalidade | Exemplo de corpo |
-|---|---|---|
-| `POST /usuarios` | Cria usuário | `{"name":"Ana Silva","email":"ana@example.org","registration":1234,"type":"SOLICITANTE","ticketsId":[],"sectorId":null}` |
-| `GET /usuarios` | Pesquisa/pagina usuários | Query opcional: `name=ana&type=SOLICITANTE&sectorId=1&page=0&size=20` |
-| `GET /usuarios/{id}` | Busca usuário | — |
-| `GET /usuarios/{id}/chamados` | Lista chamados do usuário; filtro opcional de status | Query: `status=ABERTO&page=0&size=20` |
-| `PUT /usuarios/{id}` | Atualiza usuário | Mesmo formato do `POST /usuarios`. |
-
-## Postman
-
-Importe `postman/SICI.postman_collection.json` e `postman/SICI.postman_environment.json`. Selecione o ambiente **SICI Local**; ele define `base_url` como `http://localhost:8080`. A collection contém exemplos para todos os endpoints implementados.
-
-## Formato de erros
-
-Erros são respondidos como JSON com `timestamp`, `status`, `message` e `path`. Validação de entrada retorna 400, recurso inexistente 404 e conflitos/regras de negócio 409.
+1. Abra o **Postman** (ou Insomnia).
+2. Clique no botão **"Import"** no canto superior esquerdo.
+3. Selecione o arquivo `postman/SICI.postman_collection.json` e `postman/SICI.postman_environment.json` presente neste repositório.
+4. As rotas estarão organizadas por pastas (Setores, Usuários, Chamados). Basta abrir, alterar os IDs conforme necessário no corpo (`Body`) da requisição e clicar em **Send**.
+   *(Nota: Certifique-se de que a API local ou no Docker esteja rodando ao disparar as requisições).*
